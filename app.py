@@ -1,15 +1,14 @@
 import os
-import secrets
 import json
+import pprint
+import secrets
 import operator
-from typing import Annotated, Sequence, TypedDict, Dict
+import streamlit as st
 from langchain import hub
 from serpapi import GoogleSearch
 from dotenv import load_dotenv
-import pprint
-import streamlit as st
+from typing import Annotated, Sequence, TypedDict, Dict
 from langgraph.graph import END, StateGraph
-
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.vectorstores import Chroma
@@ -24,11 +23,14 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.utils.function_calling import convert_to_openai_tool
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-
-from potsgres import create_record, update_record
+from postgres import create_record, update_record
 from prompt import get_template, sorted_keywords_string
-import pdb
 
+### Uncomment import 'pdb' this to use debugger in the app
+### Use this code in between any file or function to stop debugger at any point pdb.set_trace()
+# import pdb
+
+## Used to load .env file
 load_dotenv()
 
 os.environ["LANGCHAIN_TRACING_V2"] = os.getenv("LANGCHAIN_TRACING_V2")
@@ -37,7 +39,6 @@ os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
 os.environ["TAVILY_API_KEY"] = os.getenv("TAVILY_API_KEY")
 SERP_API_KEY = os.getenv("SERP_API_KEY")
-
 
 class GraphState(TypedDict):
     keys: Dict[str, any]
@@ -97,8 +98,6 @@ def generate(state):
     keywords_string = sorted_keywords_string(keywords)
     template = get_template()
     prompt = PromptTemplate(template=template, input_variables=["context", "question", "meta_description", "keywords_string"])
-    pdb.set_trace()
-    print(f"---'{prompt}'---")
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, streaming=True)
     def format_docs(docs):
         return "\n\n".join(doc.page_content for doc in docs)
@@ -144,14 +143,19 @@ if st.button("Generate SEO Content"):
   st.subheader("Generated Content:")
   st.text(output["keys"]["generation"])
 
-# inputs = {"keys": {'question': 'How LLM works?', 'meta_description': 'Discover how Language Model (LLM) technology works, unraveling the intricacies of natural language processing. Explore the underlying mechanisms that power LLMs and gain insights into their applications. Unleash the potential of language understanding with a comprehensive overview of LLM functioning and its impact on various industries.', 'keywords': {'LLM technology': 1}}}
 
-# # inputs = {"keys": {"question": "What is Quantum Computing and How it is different from our traditional systems?"}}
+
+#### Below code is use to manually invoke app.py
+
+# inputs = {"keys": {
+# 'question': 'How electrical tranformer works?',
+# 'meta_description': 'Explore the inner workings of electrical transformers and unravel the principles of electromagnetic induction that power these crucial devices. Discover how alternating current in the primary winding generates a magnetic field, inducing voltage in the secondary winding. Delve into the transformative role of the core material, voltage relationships, and the distinction between step-up and step-down transformers. Learn how transformers facilitate efficient energy transfer in power distribution, enabling electricity to flow seamlessly across long distances and meet diverse voltage requirements. This comprehensive guide illuminates the fundamental mechanisms behind how electrical transformers work, essential for anyone seeking insights into power systems and electrical engineering.',
+# 'keywords': {'Electromagnetic induction': 1}}}
+
 # for output in app.stream(inputs):
 #     for key, value in output.items():
 #         pprint.pprint(f"Node '{key}':")
 #     pprint.pprint("\n---\n")
-
 
 # pprint.pprint(value["keys"]["generation"])
 

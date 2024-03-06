@@ -1,6 +1,5 @@
 from langchain import PromptTemplate
 
-
 def get_template():
     template = """
     **Title:** Write a comprehensive and informative blog post answering the following question: {question}
