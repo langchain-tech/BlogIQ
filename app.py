@@ -26,9 +26,13 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from postgres import create_record, update_record
 from prompt import get_template, sorted_keywords_string
 
+
+from langchain_community.chat_models import ChatOllama
+from langchain_community.embeddings import OllamaEmbeddings
+
 ### Uncomment import 'pdb' this to use debugger in the app
 ### Use this code in between any file or function to stop debugger at any point pdb.set_trace()
-# import pdb
+import pdb
 
 ## Used to load .env file
 load_dotenv()
@@ -43,7 +47,7 @@ SERP_API_KEY = os.getenv("SERP_API_KEY")
 class GraphState(TypedDict):
     keys: Dict[str, any]
 
-def create_collection(collection_name, question):
+def serp_api_caller(question):
     print("---Calling SerpApi---")
     params = {
         "engine": "google",
@@ -53,10 +57,22 @@ def create_collection(collection_name, question):
     search = GoogleSearch(params)
     results = search.get_dict()
     organic_results = results["organic_results"]
-    urls = [details['link'] for details in organic_results]
+    return [details['link'] for details in organic_results]
+
+
+def create_collection(collection_name, question, urls, option):
+    if option == 'Use Serpi Api':
+        urls = serp_api_caller(question)
+    elif option == 'Use Custom Urls':
+        urls
+    elif option == 'Use Both of them':
+        serp_urls = serp_api_caller(question)
+        urls = urls + serp_urls
     print("---Got Results---")
+    print(urls)
     docs = [WebBaseLoader(url).load() for url in urls]
     docs_list = [item for sublist in docs for item in sublist]
+    print(docs_list)
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         chunk_size=250, chunk_overlap=0
     )
@@ -71,7 +87,7 @@ def create_collection(collection_name, question):
     return vectorstore.as_retriever()
 
 def retrieve_documents(collection_name, question):
-    embedding_function = OpenAIEmbeddings()
+    embedding_function = OllamaEmbeddings()
     vectorstore = Chroma(collection_name, embedding_function)
     retriever = vectorstore.as_retriever()
     documents = retriever.get_relevant_documents(question)
@@ -82,11 +98,25 @@ def retrieve(state):
     state_dict = state["keys"]
     question = state_dict["question"]
     keywords = state_dict["keywords"]
-    meta_description = state_dict["meta_description"]
+    additional_context = state_dict["additional_context"]
+    blog_words_limit = state_dict["blog_words_limit"]
+    option = state_dict["option"]
+    urls = state_dict["urls"]
     collection_key = secrets.token_hex(12 // 2)
-    retriever = create_collection(collection_key, question)
+    retriever = create_collection(collection_key, question, urls, option)
     documents = retriever.get_relevant_documents(question)
-    return {"keys": {"documents": documents, "question": question, 'keywords': keywords, "meta_description": meta_description}}
+    return {    "keys":
+
+                {
+                    "documents": documents,
+                    "question": question,
+                    'keywords': keywords,
+                    "additional_context": additional_context,
+                    "blog_words_limit": blog_words_limit,
+                    "option": option,
+                    "urls": urls
+                }
+            }
 
 def generate(state):
     print("---GENERATE---")
@@ -94,23 +124,43 @@ def generate(state):
     question = state_dict["question"]
     documents = state_dict["documents"]
     keywords = state_dict["keywords"]
-    meta_description = state_dict["meta_description"]
+    additional_context = state_dict["additional_context"]
+    blog_words_limit = state_dict["blog_words_limit"]
+    option = state_dict["option"]
+    urls = state_dict["urls"]
     keywords_string = sorted_keywords_string(keywords)
     template = get_template()
-    prompt = PromptTemplate(template=template, input_variables=["context", "question", "meta_description", "keywords_string"])
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, streaming=True)
+    prompt = PromptTemplate(template=template, input_variables=["context", "question", "additional_context", "keywords_string", "blog_words_limit"])
+    llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=0.7, streaming=True, max_tokens=4096, stop=None)
+    # llm = ChatOllama(model="llama2:latest")
     def format_docs(docs):
         return "\n\n".join(doc.page_content for doc in docs)
+    print(prompt)
     rag_chain = prompt | llm | StrOutputParser()
     generation = rag_chain.invoke(
         {
-            "documents": documents, 
-            "question": question, 
-            "meta_description": meta_description, 
-            "keywords_string": keywords_string
+            "documents": documents,
+            "question": question,
+            "additional_context": additional_context,
+            "keywords_string": keywords_string,
+            "blog_words_limit": blog_words_limit
         }
     )
-    return {"keys": {"documents": documents, "question": question, "generation": generation, 'keywords': keywords, "meta_description": meta_description}}
+    print("------- Generated -------")
+    return {    "keys":
+
+                {
+                    "documents": documents,
+                    "question": question,
+                    'keywords': keywords,
+                    "additional_context": additional_context,
+                    "blog_words_limit": blog_words_limit,
+                    "option": option,
+                    "urls": urls,
+                    "generation": generation
+
+                }
+            }
 
 workflow = StateGraph(GraphState)
 workflow.add_node("retrieve", retrieve)
@@ -120,10 +170,24 @@ workflow.add_edge("retrieve", "generate")
 workflow.add_edge("generate", END)
 app = workflow.compile()
 
+
+
+def handle_urls():
+    urls_str = st.text_input("Enter URLs (separated by commas):")
+    if urls_str:
+        urls_str = urls_str.strip()
+        if urls_str:
+            urls = [url.strip() for url in urls_str.split(",")]
+            return urls
+        else:
+            st.warning("Please enter URLs separated by commas.")
+    return None
+
 st.title("SEO Content Generator")
 
 question = st.text_input("Enter your question:")
-meta_description = st.text_input("Enter your meta description:")
+additional_context = st.text_area("Enter additional context:")
+blog_words_limit = st.radio('Blog size in number of words:', ['500 - 1000', '1000 - 1500', '1500 - 2000', '2000 - 2500'])
 
 keywords = {}
 num_keywords = st.number_input("Number of Keywords:", min_value=1, key="num_keywords_input")
@@ -132,11 +196,28 @@ for i in range(num_keywords):
   priority = st.number_input(f"Priority for {keyword} (higher = more important):", min_value=1, key=f"priority_input_{i+1}")
   keywords[keyword] = priority
 
+
+option = st.radio('Select an option:', ['Use Serpi Api', 'Use Custom Urls', 'Use Both of them'])
+if option == 'Use Serpi Api':
+    st.write('Using Serp API!')
+    urls = []
+elif option == 'Use Custom Urls':
+    st.write('Using Custom Urls!')
+    urls = handle_urls()
+elif option == 'Use Both of them':
+    st.write('Using Both!')
+    urls = handle_urls()
+else:
+    st.write('No option selected')
+
 if st.button("Generate SEO Content"):
   context = {
       "question": question,
-      "meta_description": meta_description,
+      "additional_context": additional_context,
       "keywords": keywords,
+      "blog_words_limit": blog_words_limit,
+      "option": option,
+      "urls": urls
   }
   print(context)
   output = app.invoke({"keys": context})
@@ -149,7 +230,7 @@ if st.button("Generate SEO Content"):
 
 # inputs = {"keys": {
 # 'question': 'How electrical tranformer works?',
-# 'meta_description': 'Explore the inner workings of electrical transformers and unravel the principles of electromagnetic induction that power these crucial devices. Discover how alternating current in the primary winding generates a magnetic field, inducing voltage in the secondary winding. Delve into the transformative role of the core material, voltage relationships, and the distinction between step-up and step-down transformers. Learn how transformers facilitate efficient energy transfer in power distribution, enabling electricity to flow seamlessly across long distances and meet diverse voltage requirements. This comprehensive guide illuminates the fundamental mechanisms behind how electrical transformers work, essential for anyone seeking insights into power systems and electrical engineering.',
+# 'additional_context': 'Explore the inner workings of electrical transformers and unravel the principles of electromagnetic induction that power these crucial devices. Discover how alternating current in the primary winding generates a magnetic field, inducing voltage in the secondary winding. Delve into the transformative role of the core material, voltage relationships, and the distinction between step-up and step-down transformers. Learn how transformers facilitate efficient energy transfer in power distribution, enabling electricity to flow seamlessly across long distances and meet diverse voltage requirements. This comprehensive guide illuminates the fundamental mechanisms behind how electrical transformers work, essential for anyone seeking insights into power systems and electrical engineering.',
 # 'keywords': {'Electromagnetic induction': 1}}}
 
 # for output in app.stream(inputs):
