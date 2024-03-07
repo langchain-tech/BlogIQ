@@ -1,36 +1,73 @@
 from langchain import PromptTemplate
 
+# def get_template():
+#     template = """
+#     Provide me Good Blog
+#     Note --> Generates content without imposing a maximum token limit. Must contain {blog_words_limit} words.
+#     As you are one of the best content writers in the world, your name is Joe. Today, we're tasked with writing a blog post on 
+#     """
+#     return template
+
+# def get_template():
+#     template = """
+#     Provide me Good Blog.
+#     Here is the question on which you need to write a blog. Question --> {question}
+#     Note --> Generates content without imposing a maximum token limit. Must contain {blog_words_limit} words.
+#     As you are one of the best content writers in the world, your name is Joe. Today, we're tasked with writing a blog post, and it's essential that we adhere to the following ruleset:
+
+#     1) Make sure each paragraph must be 100 to 150 words long.
+#     2) The blog should be human-readable and unique.
+#     3) A conclusion should be included at the end of the blog.
+#     4) The blog should follow a common blogging structure.
+#     5) Blog should in multiple paragraphs 
+#     6) Use meta keywords in blog writing
+#     7) Make sure not to copy anything from documents (knowledge base) directly, otherwise it will be plagiarism
+
+#     I'll be provided with documents to review and understand the topics we'll be covering. Additionally, I'll provide meta keywords that we need to incorporate to enhance our ranking on Google search.
+
+#     Here is the documents (knowledge base) that you need to utilise to write blog --> {documents}, meta keywords --> {keywords_string} & here is addtional context ---> {additional_context}
+#     """
+#     return template
+
 def get_template():
     template = """
-    **Title:** Write a comprehensive and informative blog post answering the following question: {question}
+        Provide a comprehensive blog post on the topic of Natural Language Processing (NLP).
+        
+        Historical Roots of NLP:
+        Discuss the evolution of NLP from its inception, highlighting key milestones and early challenges. Consider the Turing Test, early attempts, and notable achievements.
 
-    **Introduction:**
+        Core Mechanisms of NLP:
+        Explore fundamental NLP mechanisms like tokenization, part-of-speech tagging, named entity recognition, and sentiment analysis. Elaborate on their significance and applications.
 
-    In today's world, many people are curious about {question}. This blog post will delve into this topic, providing clear explanations, valuable insights, and drawing upon the latest research and information.
+        Evolution of NLP:
+        Trace the evolution from rule-based systems to machine learning. Discuss the impact of machine learning on NLP advancements, with a focus on key models and breakthroughs.
 
-    **Body:**
+        Contemporary NLP:
+        Delve into the current era dominated by deep learning and neural networks. Highlight models such as BERT and GPT, emphasizing their contextual understanding and generative capabilities.
 
-    * **What is {question}?** (Define the core concept, incorporating insights from {documents})
-    * **Why is {question} important?** (Highlight its significance, referencing {documents})
-    * **How does {question} work?** (Explain the process/mechanism) (if applicable)
-    * **What are the benefits of {question}?** (List and elaborate, leveraging {documents})
-    * **Are there any challenges associated with {question}?** (Discuss potential drawbacks, citing {documents})
-    * **What are some real-world applications of {question}?** (Provide practical examples, supported by {documents})
+        Evaluation Metrics in NLP:
+        Explain the metrics used to assess NLP model performance. Include insights into text classification metrics, language generation evaluation, and the importance of accurate assessment.
 
-    **Conclusion:**
+        Ethical Dimensions of NLP:
+        Address the ethical considerations in NLP, including issues of bias, data privacy, and responsible AI usage. Discuss the challenges and proposed solutions for ethical NLP development.
 
-    This blog post has explored {question} in detail. By understanding {documents}, you can gain valuable knowledge about this topic.
+        Future Trajectories of NLP:
+        Look ahead to the future of NLP, considering advancements in quantum computing, integration with other AI domains, and the importance of explainable AI.
 
-    **Meta Description:** {meta_description}
+        Conclusion:
+        Summarize the significance of NLP in the technological landscape. Emphasize the transformative impact and the ongoing journey toward a more connected and intelligent future.
 
-    **Keywords:** {keywords_string}
+        Additional Context:
+        {additional_context}
 
-    **Additional Resources:**
+        Meta Keywords:
+        {keywords_string}
 
-    * Consider including links to the relevant documents used within the body for further exploration.
-    * Here is the documents that have latest knowlege about the question --> {documents}
+        Knowledge Base:
+        {documents}
 
-    **Write the blog post in a clear, concise, and engaging style, ensuring it is informative and SEO-friendly.**
+        Blog Minimum Word Limit and make sure blog contains:
+        {blog_words_limit}
     """
     return template
 
