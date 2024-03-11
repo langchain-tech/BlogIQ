@@ -82,7 +82,6 @@ def create_collection(collection_name, question, urls):
 
 def retrieve_documents(collection_name, question):
     print("---RETRIEVING OLD DOCUMENTS---")
-    print(collection_name, question)
     embedding_function = OpenAIEmbeddings()
     vectorstore = Chroma(collection_name, embedding_function)
     return vectorstore.as_retriever()
@@ -135,7 +134,59 @@ def retrieve(state):
             }
 
 def generate(state):
-    blog_structure = { "blog_structure_1": { "title": "The Evolution of NLP: From Language Models to ChatGPT", "headings": [ "Introduction to NLP and Language Models", "The Rise of Large Language Models (LLMs)", "Understanding the Technology Behind ChatGPT", "Training and Development of Language Models", "Applications of NLP in Real-World Scenarios", "Challenges and Limitations of Current NLP Models", "Future Trends in NLP and Language Processing", "Enhancing ChatGPT with Advanced Techniques", "The Impact of NLP on Various Industries", "Conclusion and Future Outlook" ] }, "blog_structure_2": { "title": "Unraveling the Power of NLP: A Deep Dive into Language Models", "headings": [ "Demystifying Natural Language Processing (NLP)", "Exploring the Inner Workings of Large Language Models", "The Mechanics of ChatGPT and Similar LLMs", "Insights into the Training Process of Language Models", "Practical Applications and Use Cases of NLP", "Addressing the Challenges in NLP Development", "Emerging Trends and Innovations in NLP", "Optimizing ChatGPT for Enhanced Performance", "NLP's Influence on Business and Society", "Looking Ahead: The Future of NLP and Language Understanding" ] }, "blog_structure_3": { "title": "Navigating the NLP Landscape: From LLMs to Chatbots", "headings": [ "A Primer on Natural Language Processing (NLP)", "Evolution of Language Models and LLMs", "Decoding the Inner Workings of ChatGPT", "Training Strategies for Language Models", "Real-World Applications of NLP Technology", "Overcoming Challenges in NLP Implementation", "Future Directions in NLP Research", "Advanced Techniques for Improving ChatGPT", "NLP's Impact on Diverse Industries", "Final Thoughts: Shaping the Future of NLP" ] } }
+    blog_structure = {
+        "Blog_Structure_1":
+            {
+                "title": "TITLE",
+                "headings":
+                    [
+                        "HEADING 1",
+                        "HEADING 2",
+                        "HEADING 3",
+                        "HEADING 4",
+                        "HEADING 5",
+                        "HEADING 6",
+                        "HEADING 7",
+                        "HEADING 8",
+                        "HEADING 9",
+                        "HEADING 10"
+                    ]
+            },
+        "Blog_Structure_2":
+            {
+                "title": "TITLE",
+                "headings":
+                    [
+                        "HEADING 1",
+                        "HEADING 2",
+                        "HEADING 3",
+                        "HEADING 4",
+                        "HEADING 5",
+                        "HEADING 6",
+                        "HEADING 7",
+                        "HEADING 8",
+                        "HEADING 9",
+                        "HEADING 10"
+                    ]
+            },
+        "Blog_Structure_3":
+            {
+                "title": "TITLE",
+                "headings":
+                    [
+                        "HEADING 1",
+                        "HEADING 2",
+                        "HEADING 3",
+                        "HEADING 4",
+                        "HEADING 5",
+                        "HEADING 6",
+                        "HEADING 7",
+                        "HEADING 8",
+                        "HEADING 9",
+                        "HEADING 10"
+                    ]
+            }
+    }
     print("---GENERATE---")
     state_dict = state["keys"]
     question = state_dict["question"]
@@ -149,11 +200,11 @@ def generate(state):
     structure = state_dict["structure"]
 
     if step_to_execute == "Generate Structure":
+        heading = ''
         template = get_structure_template()
         prompt = PromptTemplate(template=template, input_variables=["documents", "question", "additional_context", "primary_keyword", "blog_structure"])
     elif step_to_execute == "Generate Content":
         heading = state_dict["heading"]
-        print("dasdasdasdas", heading)
         template = get_content_generator_template()
         prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "blog_words_limit", "refference_links", "heading"])
 
@@ -238,9 +289,9 @@ def handle_urls():
     return []
 
 def primary_details(session_data):
-    st.title("Primary Details:")
+    st.title("Primary Details to generate a blog:")
 
-    question = st.text_input("Enter your topic:", session_data['question'])
+    question = st.text_input("Enter your topic name:", session_data['question'])
     primary_keyword = st.text_input("Enter primary keyword:", session_data['primary_keyword'])
     blog_words_limit_options = ['500 - 1000', '1000 - 1500', '1500 - 2000', '2000 - 2500']
     blog_words_limit_index = blog_words_limit_options.index(session_data['blog_words_limit'] or '500 - 1000')
@@ -268,7 +319,6 @@ def primary_details(session_data):
     session_data['question'] = question
     session_data['primary_keyword'] = primary_keyword
     session_data['blog_words_limit'] = blog_words_limit
-    print(session_data)
 
     return question, primary_keyword, blog_words_limit, session_data['urls']
 
@@ -277,14 +327,19 @@ def generate_structure_form(session_data):
     additional_context = st.text_area("Enter additional context for Structure:", session_data['additional_context'])
     session_data['additional_context'] = additional_context
 
-def main():
-    st.sidebar.title("Form Wizard")
+def convert_to_title_case(input_string):
+    words = input_string.split('_')
+    capitalized_words = [word.capitalize() for word in words]
+    result_string = ' '.join(capitalized_words)
+    return result_string
 
-    # Initialize session_data dictionary
+def main():
+    st.sidebar.title("Blog Generator for SEO")
+
     if 'session_data' not in st.session_state:
         st.session_state.session_data = initialize_session_data()
 
-    current_step = st.sidebar.selectbox("Step", ["Primary Details", "Generate Structure", "Generate Content"])
+    current_step = st.sidebar.radio("Step to create a Blog:", ["Primary Details", "Generate Structure", "Generate Content"])
 
     if current_step == "Primary Details":
         primary_details(st.session_state.session_data)
@@ -306,204 +361,51 @@ def main():
         if temp_structure and 'structure' in temp_structure:
             if output:
                 st.session_state.session_data['collection_key'] = output["keys"]["collection_key"]
-            st.text(temp_structure['structure'])
+            data = ast.literal_eval(temp_structure['structure'])
+            for key, value in data.items():
+                st.write(f"## {convert_to_title_case(key)}")
+                st.write(f"## Title: {value['title']}")
+                for heading in value['headings']:
+                    heading
+
+            st.write(f"### Selected Blog Structure:")
+            selected_blog = st.selectbox('Select a Blog Structure', list(data.keys()))
+            st.session_state.session_data['selected_blog'] = selected_blog
+            st.write(f"## {data[selected_blog]['title']}")
+            st.write("### Headings:")
+            for heading in data[selected_blog]['headings']:
+                heading
+
 
     elif current_step == "Generate Content":
         st.session_state.session_data['step_to_execute'] = current_step
         context = st.session_state.session_data
         structure_text = context['structure']
         parsed_structure = ast.literal_eval(structure_text)
-        headings = parsed_structure['blog_structure_1']['headings']
-        print("------------------------------================================",headings)
-        blog_content = ""
+        headings = parsed_structure[context['selected_blog']]['headings']
+        st.write(f"## Question :--> {context['question']}")
+        st.write(f"## Primary Keyword :--> {context['primary_keyword']}")
+        st.write(f"## Word Limit :--> {context['blog_words_limit']} approx.")
+        st.write(f"## Additional Context :--> {context['additional_context']}")
+        st.write(f"## Blog Title :--> {parsed_structure[context['selected_blog']]['title']}")
         for heading in headings:
-            context['heading'] = heading
-            time.sleep(10)
-            output = app.invoke({"keys": context})
-            current_heading_content = output["keys"]["blog"]
-            blog_content += f"## {heading}\n\n{current_heading_content}\n\n"
+            heading
 
-        blog_content
-
+        if st.button("Generate Blog Content"):
+            content = ''
+            for heading in headings:
+                context['heading'] = heading
+                time.sleep(10)
+                output = app.invoke({"keys": context})
+                current_heading_content = output["keys"]["blog"]
+                f"## {heading}\n\n{current_heading_content}\n\n"
+                content += f"## {heading}\n\n{current_heading_content}\n\n"
+                st.session_state.session_data['blog'] = content
+        else:
+            # context
+            st.session_state.session_data['blog']
             # if st.sidebar.button("Reset", key="reset"):
             #     st.session_state.session_data = initialize_session_data()
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-# Initialize session_state
-# if 'session_state' not in st.session_state:
-#     st.session_state.session_data = {
-#         'question': "",
-#         'primary_keyword': "",
-#         'blog_words_limit': "",
-#         'urls': []
-#     }
-
-# def handle_urls():
-#     urls_str = st.text_input("Enter URLs (separated by commas):")
-#     if urls_str:
-#         urls_str = urls_str.strip()
-#         if urls_str:
-#             urls = [url.strip() for url in urls_str.split(",")]
-#             return urls
-#         else:
-#             st.warning("Please enter URLs separated by commas.")
-#     return []
-
-# def primary_details():
-#     st.title("Primary Details:")
-#     session_data = st.session_state.session_data
-    
-#     question = st.text_input("Enter your topic:", session_data['question'])
-#     primary_keyword = st.text_input("Enter primary keyword:", session_data['primary_keyword'])
-#     blog_words_limit_options = ['500 - 1000', '1000 - 1500', '1500 - 2000', '2000 - 2500']
-#     blog_words_limit_index = blog_words_limit_options.index(session_data['blog_words_limit'] or '500 - 1000')
-
-#     blog_words_limit = st.radio('Blog size in number of words:', blog_words_limit_options, index=blog_words_limit_index)
-    
-#     option = st.radio('Select an option:', ['Use Serpi Api', 'Use Custom Urls', 'Use Both of them'])
-    
-#     if option == 'Use Serpi Api' and question:
-#         st.write('Using Serp API!')
-#         session_data['urls'] = serp_api_caller(question)
-#         st.write(session_data['urls'])
-#     elif option == 'Use Custom Urls':
-#         st.write('Using Custom Urls!')
-#         session_data['urls'] = handle_urls()
-#         st.write(session_data['urls'])
-#     elif option == 'Use Both of them' and question:
-#         st.write('Using Both!')
-#         session_data['urls'] = handle_urls() + serp_api_caller(question)
-#         st.write(session_data['urls'])
-#     else:
-#         st.write('No option selected')
-    
-#     # Update session_state
-#     session_data['question'] = question
-#     session_data['primary_keyword'] = primary_keyword
-#     session_data['blog_words_limit'] = blog_words_limit
-#     print(session_data)
-
-#     return question, primary_keyword, blog_words_limit, session_data['urls']
-
-# def generate_structure():
-#     st.title("Generate Structure:")
-#     additional_context = st.text_area("Enter additional context for Structure:")
-    
-#     return additional_context
-
-# def main():
-#     st.sidebar.title("Form Wizard")
-#     current_step = st.sidebar.selectbox("Step", ["Primary Details", "Generate Structure"])
-
-#     if current_step == "Primary Details":
-#         question, primary_keyword, blog_words_limit, urls = primary_details()   
-    
-#     elif current_step == "Generate Structure":
-#         additional_context = generate_structure()
-    
-#     if st.sidebar.button("Reset", key="reset"):
-#         st.session_state.session_data = {
-#             'question': "",
-#             'primary_keyword': "",
-#             'blog_words_limit': "",
-#             'urls': []
-#         }
-
-# if __name__ == "__main__":
-#     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# st.title("SEO Content Generator")
-
-# question = st.text_input("Enter your topic:")
-# additional_context = st.text_area("Enter additional context:")
-# blog_words_limit = st.radio('Blog size in number of words:', ['500 - 1000', '1000 - 1500', '1500 - 2000', '2000 - 2500'])
-
-# # keywords = {}
-# # num_keywords = st.number_input("Number of Keywords:", min_value=1, key="num_keywords_input")
-# # for i in range(num_keywords):
-# #   keyword = st.text_input(f"Keyword {i+1}:", key=f"keyword_input_{i+1}")
-# #   priority = st.number_input(f"Priority for {keyword} (higher = more important):", min_value=1, key=f"priority_input_{i+1}")
-# #   keywords[keyword] = priority
-# primary_keyword = st.text_input("Enter primary keyword:")
-
-
-
-# if st.button("Generate SEO Content"):
-#   context = {
-#       "question": question,
-#       "additional_context": additional_context,
-#       "primary_keyword": primary_keyword,
-#       "blog_words_limit": blog_words_limit,
-#       "option": option,
-#       "urls": urls
-#   }
-#   print(context)
-#   output = app.invoke({"keys": context})
-#   st.subheader("Generated Content:")
-#   st.text(output["keys"]["generation"])
-
-
-
-#### Below code is use to manually invoke app.py
-
-# inputs = {"keys": {
-# 'question': 'How electrical tranformer works?',
-# 'additional_context': 'Explore the inner workings of electrical transformers and unravel the principles of electromagnetic induction that power these crucial devices. Discover how alternating current in the primary winding generates a magnetic field, inducing voltage in the secondary winding. Delve into the transformative role of the core material, voltage relationships, and the distinction between step-up and step-down transformers. Learn how transformers facilitate efficient energy transfer in power distribution, enabling electricity to flow seamlessly across long distances and meet diverse voltage requirements. This comprehensive guide illuminates the fundamental mechanisms behind how electrical transformers work, essential for anyone seeking insights into power systems and electrical engineering.',
-# 'keywords': {'Electromagnetic induction': 1}}}
-
-# for output in app.stream(inputs):
-#     for key, value in output.items():
-#         pprint.pprint(f"Node '{key}':")
-#     pprint.pprint("\n---\n")
-
-# pprint.pprint(value["keys"]["generation"])
-
-
-
-
