@@ -110,12 +110,12 @@ def retrieve(state):
     if step_to_execute == "Generate Structure":
         collection_key = secrets.token_hex(12 // 2)
         retriever = create_collection(collection_key, question, urls)
+        documents = retriever.get_relevant_documents(question)
     elif step_to_execute == "Generate Content":
         collection_key = state_dict["collection_key"]
-        retriever = retrieve_documents(collection_key, question)
+        retriever = retrieve_documents(collection_key, heading)
+        documents = retriever.get_relevant_documents(heading)
 
-    
-    documents = retriever.get_relevant_documents(question)
     return  {    "keys":
 
                 {
