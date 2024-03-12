@@ -1,7 +1,3 @@
-from langchain import PromptTemplate
-    
-
-     
 def get_structure_template():
     template = """
     Please provide me structure of blog of on {question}, must have a structure, must have good headings and must have 10 headings.

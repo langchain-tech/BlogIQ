@@ -2,6 +2,9 @@ from googleads import adwords
 from datetime import datetime, timedelta
 import requests
 
+
+### https://github.com/googleads/google-ads-python/blob/bcee4d08df0ea037d695d1bbcb595d7ee8adf9cd/examples/planning/generate_keyword_ideas.py
+
 def get_country_code(country_name):
     url = "https://restcountries.com/v3.1/name/" + country_name
     response = requests.get(url)

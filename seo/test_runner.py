@@ -1,4 +1,4 @@
-from seo import get_google_keyword_data
+from seo.seo import get_google_keyword_data
 
 if __name__ == "__main__":
     # Example usage

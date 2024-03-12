@@ -1,6 +1,4 @@
 import os
-import ast
-import time
 import json
 import pprint
 import secrets
@@ -32,6 +30,11 @@ from prompt import get_structure_template, get_content_generator_template
 from langchain_community.chat_models import ChatOllama
 from langchain_community.embeddings import OllamaEmbeddings
 
+## app imports
+from st_frontend.frontend import main
+from prompts.content_prompt import content_template
+from prompts.structure_prompt import structure_template
+
 ### Uncomment import 'pdb' this to use debugger in the app
 ### Use this code in between any file or function to stop debugger at any point pdb.set_trace()
 import pdb
@@ -44,23 +47,9 @@ os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGCHAIN_PROJECT")
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
 os.environ["TAVILY_API_KEY"] = os.getenv("TAVILY_API_KEY")
-SERP_API_KEY = os.getenv("SERP_API_KEY")
 
 class GraphState(TypedDict):
     keys: Dict[str, any]
-
-def serp_api_caller(question):
-    print("---Calling SerpApi---")
-    params = {
-        "engine": "google",
-        "q": question,
-        "api_key": SERP_API_KEY
-    }
-    search = GoogleSearch(params)
-    results = search.get_dict()
-    organic_results = results["organic_results"]
-    return [details['link'] for details in organic_results]
-
 
 def create_collection(collection_name, question, urls):
     print("---Got Results---")
@@ -201,11 +190,11 @@ def generate(state):
 
     if step_to_execute == "Generate Structure":
         heading = ''
-        template = get_structure_template()
+        template = structure_template()
         prompt = PromptTemplate(template=template, input_variables=["documents", "question", "additional_context", "primary_keyword", "blog_structure"])
     elif step_to_execute == "Generate Content":
         heading = state_dict["heading"]
-        template = get_content_generator_template()
+        template = content_template()
         prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "blog_words_limit", "refference_links", "heading"])
 
     llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=0.7, streaming=True, max_tokens=4096)
@@ -267,145 +256,5 @@ workflow.add_edge("retrieve", "generate")
 workflow.add_edge("generate", END)
 app = workflow.compile()
 
-    
-def initialize_session_data():
-    return {
-        'question': "",
-        'primary_keyword': "",
-        'blog_words_limit': "",
-        'urls': [],
-        'additional_context': ""
-    }
-
-def handle_urls():
-    urls_str = st.text_input("Enter URLs (separated by commas):")
-    if urls_str:
-        urls_str = urls_str.strip()
-        if urls_str:
-            urls = [url.strip() for url in urls_str.split(",")]
-            return urls
-        else:
-            st.warning("Please enter URLs separated by commas.")
-    return []
-
-def primary_details(session_data):
-    st.title("Primary Details to generate a blog:")
-
-    question = st.text_input("Enter your topic name:", session_data['question'])
-    primary_keyword = st.text_input("Enter primary keyword:", session_data['primary_keyword'])
-    blog_words_limit_options = ['500 - 1000', '1000 - 1500', '1500 - 2000', '2000 - 2500']
-    blog_words_limit_index = blog_words_limit_options.index(session_data['blog_words_limit'] or '500 - 1000')
-
-    blog_words_limit = st.radio('Blog size in number of words:', blog_words_limit_options, index=blog_words_limit_index)
-    
-    option = st.radio('Select an option:', ['Use Serpi Api', 'Use Custom Urls', 'Use Both of them'])
-    
-    if option == 'Use Serpi Api' and question:
-        st.write('Using Serp API!')
-        session_data['urls'] = serp_api_caller(question)   # Replace with actual Serpi API data
-        st.write(session_data['urls'])
-    elif option == 'Use Custom Urls':
-        st.write('Using Custom Urls!')
-        session_data['urls'] = handle_urls()
-        st.write(session_data['urls'])
-    elif option == 'Use Both of them' and question:
-        st.write('Using Both!')
-        session_data['urls'] = handle_urls() + serp_api_caller(question)  # Replace with actual Serpi API data
-        st.write(session_data['urls'])
-    else:
-        st.write('No option selected')
-    
-    # Update session_state
-    session_data['question'] = question
-    session_data['primary_keyword'] = primary_keyword
-    session_data['blog_words_limit'] = blog_words_limit
-
-    return question, primary_keyword, blog_words_limit, session_data['urls']
-
-def generate_structure_form(session_data):
-    st.title("Generate Structure:")
-    additional_context = st.text_area("Enter additional context for Structure:", session_data['additional_context'])
-    session_data['additional_context'] = additional_context
-
-def convert_to_title_case(input_string):
-    words = input_string.split('_')
-    capitalized_words = [word.capitalize() for word in words]
-    result_string = ' '.join(capitalized_words)
-    return result_string
-
-def main():
-    st.sidebar.title("Blog Generator for SEO")
-
-    if 'session_data' not in st.session_state:
-        st.session_state.session_data = initialize_session_data()
-
-    current_step = st.sidebar.radio("Step to create a Blog:", ["Primary Details", "Generate Structure", "Generate Content"])
-
-    if current_step == "Primary Details":
-        primary_details(st.session_state.session_data)
-
-    elif current_step == "Generate Structure":
-        output = ''
-        generate_structure_form(st.session_state.session_data)
-        st.session_state.session_data['step_to_execute'] = current_step
-        if st.button("Generate SEO Content"):
-            context = st.session_state.session_data
-            print("=========", context)
-            output = app.invoke({"keys": context})
-            st.subheader("Generated Content:")
-            structure = output["keys"]["generation"]
-            st.session_state.session_data['structure'] = (structure or context['structure'])
-
-        temp_structure = st.session_state.session_data
-
-        if temp_structure and 'structure' in temp_structure:
-            if output:
-                st.session_state.session_data['collection_key'] = output["keys"]["collection_key"]
-            data = ast.literal_eval(temp_structure['structure'])
-            for key, value in data.items():
-                st.write(f"## {convert_to_title_case(key)}")
-                st.write(f"## Title: {value['title']}")
-                for heading in value['headings']:
-                    heading
-
-            st.write(f"### Selected Blog Structure:")
-            selected_blog = st.selectbox('Select a Blog Structure', list(data.keys()))
-            st.session_state.session_data['selected_blog'] = selected_blog
-            st.write(f"## {data[selected_blog]['title']}")
-            st.write("### Headings:")
-            for heading in data[selected_blog]['headings']:
-                heading
-
-
-    elif current_step == "Generate Content":
-        st.session_state.session_data['step_to_execute'] = current_step
-        context = st.session_state.session_data
-        structure_text = context['structure']
-        parsed_structure = ast.literal_eval(structure_text)
-        headings = parsed_structure[context['selected_blog']]['headings']
-        st.write(f"## Question :--> {context['question']}")
-        st.write(f"## Primary Keyword :--> {context['primary_keyword']}")
-        st.write(f"## Word Limit :--> {context['blog_words_limit']} approx.")
-        st.write(f"## Additional Context :--> {context['additional_context']}")
-        st.write(f"## Blog Title :--> {parsed_structure[context['selected_blog']]['title']}")
-        for heading in headings:
-            heading
-
-        if st.button("Generate Blog Content"):
-            content = ''
-            for heading in headings:
-                context['heading'] = heading
-                time.sleep(10)
-                output = app.invoke({"keys": context})
-                current_heading_content = output["keys"]["blog"]
-                f"## {heading}\n\n{current_heading_content}\n\n"
-                content += f"## {heading}\n\n{current_heading_content}\n\n"
-                st.session_state.session_data['blog'] = content
-        else:
-            # context
-            st.session_state.session_data['blog']
-            # if st.sidebar.button("Reset", key="reset"):
-            #     st.session_state.session_data = initialize_session_data()
-
 if __name__ == "__main__":
-    main()
+    main(app)
