@@ -1,42 +1,83 @@
----
-type: service_account
-project_id: blogiq-416613
-private_key_id: bdcafee958ac1e217e3aa685e3223125ec5a6462
-private_key: |
-  -----BEGIN PRIVATE KEY-----
-  MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCjgL/e+h1pMFKK
-  WiY0WX0HwTxgyWYsfTZoZsQ57YOYSfn7Ira2s+KTZ/o3yFC3lOw2wVaByDA5dmTP
-  vr8xmMpt34WVdnoW+BOFGJkgTyZKxV0yvX/Mptdrh06VKutg07EvrKTZZzaKI3MP
-  Tm5OW8Oe/Ev1gq/B/r8rpYuaTC2UfsLv5XqAMZyoTuvTKlDVmNYNUjQD9GDnY5Cs
-  j/VYZc1fDgefU3LPs16d3+ZDTSA81pZHfgi0Hmp0EF/YZDOo0XQGozbYcu/bvShl
-  GPRV7rlT14FdX++8mfevZVX92ub8rv4+ANM4eEj/UwUF10llTpUgAy22KhoSLCHb
-  DSWYGyoHAgMBAAECggEABoy7IvI0s2iy0HAED8d18Wrq7EWlHisglCtpuO2sKTGY
-  HgNUpm+rp+lbu1hUQ3ESdVm8CWmSOlBlLB1MCMSXd1yjkUqJttnWjle0lU1rufBm
-  Egjypv7Cqmq6hHyPqUqm/RiWvKQcfzQkVnyh1pRpJblITFwhMPhE2Dltejo1qTkf
-  l1/tzbgdHOH5+87ZtiBPjkhIhFc8QwkdYVmkGaKRfAEppkAP99/9xZ2fZ/j1PPky
-  Xq1iT2TNeDkSYTvHx7ofTG/7gbc4QnqDU4Pt65MdkUj1+iHoI+GP7lGTxP/AWVZr
-  /6kITmPJSvgIA6MTnILRGnyNG9N9v3Bij2lALvwYYQKBgQDjivU1opWpJjQKAgM1
-  dYkdTokKjryJ3Q1St8QG4mmnScGuPma6jhEO+qldVNRcS58+FDnUsbPlQBbWEqH6
-  kwKU4Ni1jzrdi+gVKs9OGGXm8qwLWhPkSJ3oPkwiKvCB8apr2i/R/P+nW9OtUQCJ
-  iGCyAnpAZXvO/ij7arGiOWIi6wKBgQC383tmgkgTQ8lX06v24DBzlZYu25Bznges
-  GUva5jAcV1kPMnjrfQ4QKdZ754uhK3xRD8vXwLcD3i1KXDxWpYyoroHU+vGrsbk0
-  tC8/Dn96tdK7h4irlmcUyLYv7qfTUd2ybj9C0PrOvs0w3Tt0XUcM2mpps/Q3z2qT
-  zTTwK3g2VQKBgHOHq0bHPQu8DPID4ZM0ESEjLeuBW3L4HHqiOVJxhMleZotMvaX8
-  2eZsGK/9kTEnaDwB0vcOHtPIPZAFt95c5BOpMf7FMVMpZPXSXZ0+QAcJsZa17qGa
-  ySoQ72Dtwl2H0UqfZmZM+ZUEx64ZEZfC+a2IGoA1xq3rV+2HV5eRYSVvAoGAVHxL
-  rOUhXVfA3cmmLZkCJ9QISjUlvzRRqcVkhYE7j4i+qrAvwViKYPoWPIo4IynpywFK
-  SimE5Q3iF0kNnW4jkEW186/d11GlEoO/P2LVQfLIesDhEI3fgjg9FP6zrebnv8/K
-  1lFNIC+Z5lt1txgwTcLzJOE1xXxKIuAY9EXCzJECgYEAjtkyXPXh6nYAcaFdiaE/
-  Jtj/aK0Moh8BwaAestfeBYa6guhB+f+ipwOiDs0abgrjZXVTE/Ht4xm7612P/2wo
-  gk3pbnQr92k/+X+N/b8ELSx7Te0tyldEJw1iKhXP8dW/+LgBJrAvpumicUZeDSQv
-  EmvKY3UyzmDMqoqg7OketGg=
-  -----END PRIVATE KEY-----
-client_email: blog-iq@blogiq-416613.iam.gserviceaccount.com
-client_id: '117812802205915033239'
-auth_uri: https://accounts.google.com/o/oauth2/auth
-token_uri: https://oauth2.googleapis.com/token
-auth_provider_x509_cert_url: https://www.googleapis.com/oauth2/v1/certs
-client_x509_cert_url: https://www.googleapis.com/robot/v1/metadata/x509/blog-iq%40blogiq-416613.iam.gserviceaccount.com
-universe_domain: googleapis.com
+# Developer token
+##########################################################################################
+# A developer token is required when making requests to the Google Ads API regardless of #
+# whether you're using the OAuth2 or Service Account configurations. To obtain a         #
+# developer token see:                                                                   #
+# https://developers.google.com/google-ads/api/docs/first-call/dev-token                 #
+##########################################################################################
+developer_token: npB4f9ep-F8QbbH8Lmw5Gg
+
+# Use proto plus
+##########################################################################################
+# This parameter specifies whether the client library should return proto-plus messages  #
+# or protobuf messages. This value should be explicitly set to either "True" or "False", #
+# For more information on the differences between these two types, see our Protobuf      #
+# Messages guide:                                                                        #
+# https://developers.google.com/google-ads/api/docs/client-libs/python/protobuf-messages #
+##########################################################################################
 use_proto_plus: True
-developer_token: YOUR_DEVELOPER_TOKEN
+
+# OAuth2 configuration
+##########################################################################################
+# The below configuration parameters are used to authenticate using the recommended      #
+# OAuth2 flow. For more information on authenticating with OAuth2 see:                   #
+# https://developers.google.com/google-ads/api/docs/oauth/overview                       #
+##########################################################################################
+client_id: 225370061307-gjkcvgmocijpu3papedbgmooh2rkuu5v.apps.googleusercontent.com
+client_secret: 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
+refresh_token: 1//06ZAYFazqBXswCgYIARAAGAYSNwF-L9IrjJQS2M1LsiQ-GuHhVpi1oS_DJpkMKejntH_R0SNZCnupZSlYyv54wRpTcCLUUjT6YJM
+
+# Service Account configuration
+##########################################################################################
+# To authenticate with a service account add the appropriate values to the below         #
+# configuration parameters and remove the three OAuth2 credentials above. The            #
+# "json_key_file_path" value should be a path to your local private key json file, and   #
+# "impersonated_email" should be the email address that is being used to impersonate the #
+# credentials making requests. for more information on service accounts, see:            #
+# https://developers.google.com/google-ads/api/docs/oauth/service-accounts.              #
+# If you're authorizing with direct account access, then the "impersonated_email"        #
+# configuration is optional.                                                             #
+##########################################################################################
+# json_key_file_path: INSERT_PATH_TO_JSON_KEY_FILE_HERE
+# impersonated_email: INSERT_DOMAIN_WIDE_DELEGATION_ACCOUNT
+
+# Login customer ID configuration
+##########################################################################################
+# Required for manager accounts only: Specify the login customer ID used to authenticate #
+# API calls. This will be the customer ID of the authenticated manager account. It       #
+# should be set without dashes, for example: 1234567890 instead of 123-456-7890. You can #
+# also specify this later in code if your application uses multiple manager account +    #
+# OAuth pairs.                                                                           #
+##########################################################################################
+login_customer_id: 9121852221
+
+# Logging configuration
+##########################################################################################
+# Below you may specify the logging configuration. This will be provided as an input to  #
+# logging.config.dictConfig. Use the "level" block under the root logger configuration   #
+# to adjust the logging level. Note in the "format" field that log messages are          #
+# truncated to 5000 characters by default. You can change this to any length by removing #
+# the ".5000" portion or changing it to a different number.                              #
+# ########################################################################################
+# logging:
+  # version: 1
+  # disable_existing_loggers: False
+  # formatters:
+    # default_fmt:
+      # format: '[%(asctime)s - %(levelname)s] %(message).5000s'
+      # datefmt: '%Y-%m-%d %H:%M:%S'
+  # handlers:
+    # default_handler:
+      # class: logging.StreamHandler
+      # formatter: default_fmt
+  # loggers:
+    # "":
+      # handlers: [default_handler]
+      # level: INFO
+
+# Proxy configuration
+##########################################################################################
+# Below you can specify an optional proxy configuration to be used by requests. If you   #
+# don't have username and password, just specify host and port.                          #
+# ########################################################################################
+# http_proxy: http://user:password@localhost:8000

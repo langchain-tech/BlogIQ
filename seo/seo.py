@@ -1,91 +1,197 @@
-from googleads import adwords
-from datetime import datetime, timedelta
-import requests
+#!/usr/bin/env python
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""This example generates keyword ideas from a list of seed keywords."""
 
 
-### https://github.com/googleads/google-ads-python/blob/bcee4d08df0ea037d695d1bbcb595d7ee8adf9cd/examples/planning/generate_keyword_ideas.py
+import argparse
+import sys
+from google.ads.googleads.client import GoogleAdsClient
+from google.ads.googleads.errors import GoogleAdsException
+import pdb
 
-def get_country_code(country_name):
-    url = "https://restcountries.com/v3.1/name/" + country_name
-    response = requests.get(url)
-    if response.status_code == 200:
-        country_data = response.json()
-        if len(country_data) > 0:
-            return country_data[0]['cca2']
-    return None
+# Location IDs are listed here:
+# https://developers.google.com/google-ads/api/reference/data/geotargets
+# and they can also be retrieved using the GeoTargetConstantService as shown
+# here: https://developers.google.com/google-ads/api/docs/targeting/location-targeting
+_DEFAULT_LOCATION_IDS = ["1023191"]  # location ID for New York, NY
+# A language criterion ID. For example, specify 1000 for English. For more
+# information on determining this value, see the below link:
+# https://developers.google.com/google-ads/api/reference/data/codes-formats#expandable-7
+_DEFAULT_LANGUAGE_ID = "1000"  # language ID for English
 
-def get_google_keyword_data(phrase, start_date=None, end_date=None, country_name='United States', language='en', max_results=10):
-    country_code = get_country_code(country_name)
-    if country_code is None:
-        print(f"Could not find country code for '{country_name}'")
-        return
 
-    location = country_code.lower()  # Use ISO 3166-1 alpha-2 country code
+# [START generate_keyword_ideas]
+def main(
+    client, customer_id, location_ids, language_id, keyword_texts, page_url
+):
+    keyword_plan_idea_service = client.get_service("KeywordPlanIdeaService")
+    keyword_competition_level_enum = (
+        client.enums.KeywordPlanCompetitionLevelEnum
+    )
+    keyword_plan_network = (
+        client.enums.KeywordPlanNetworkEnum.GOOGLE_SEARCH_AND_PARTNERS
+    )
+    location_rns = map_locations_ids_to_resource_names(client, location_ids)
+    language_rn = client.get_service("GoogleAdsService").language_constant_path(
+        language_id
+    )
 
-    # Set default start and end dates if not provided
-    if not start_date:
-        start_date = (datetime.now() - timedelta(days=90)).strftime('%Y%m%d')
-    if not end_date:
-        end_date = datetime.now().strftime('%Y%m%d')
+    # Either keywords or a page_url are required to generate keyword ideas
+    # so this raises an error if neither are provided.
+    if not (keyword_texts or page_url):
+        raise ValueError(
+            "At least one of keywords or page URL is required, "
+            "but neither was specified."
+        )
 
-    # Initialize AdWords client
-    adwords_client = adwords.AdWordsClient.LoadFromStorage('../blogiq-416613-bdcafee958ac.json')
+    # Only one of the fields "url_seed", "keyword_seed", or
+    # "keyword_and_url_seed" can be set on the request, depending on whether
+    # keywords, a page_url or both were passed to this function.
+    request = client.get_type("GenerateKeywordIdeasRequest")
+    request.customer_id = customer_id
+    request.language = language_rn
+    request.geo_target_constants = location_rns
+    request.include_adult_keywords = False
+    request.keyword_plan_network = keyword_plan_network
 
-    # Initialize selector
-    selector = {
-        'searchParameters': [
-            {
-                'xsi_type': 'RelatedToQuerySearchParameter',
-                'queries': [phrase]
-            }
-        ],
-        'ideaType': 'KEYWORD',
-        'requestType': 'IDEAS'
-    }
+    # To generate keyword ideas with only a page_url and no keywords we need
+    # to initialize a UrlSeed object with the page_url as the "url" field.
+    if not keyword_texts and page_url:
+        request.url_seed.url = page_url
 
-    # Set language and location
-    if language:
-        selector['language'] = language
-    if location:
-        selector['location'] = location
+    # To generate keyword ideas with only a list of keywords and no page_url
+    # we need to initialize a KeywordSeed object and set the "keywords" field
+    # to be a list of StringValue objects.
+    if keyword_texts and not page_url:
+        request.keyword_seed.keywords.extend(keyword_texts)
 
-    # Set date range
-    date_range = {
-        'min': start_date,
-        'max': end_date
-    }
-    selector['searchParameters'].append({
-        'xsi_type': 'DateRangeSearchParameter',
-        'min': date_range['min'],
-        'max': date_range['max']
-    })
+    # To generate keyword ideas using both a list of keywords and a page_url we
+    # need to initialize a KeywordAndUrlSeed object, setting both the "url" and
+    # "keywords" fields.
+    if keyword_texts and page_url:
+        request.keyword_and_url_seed.url = page_url
+        request.keyword_and_url_seed.keywords.extend(keyword_texts)
 
-    # Set selector paging
-    selector['paging'] = {
-        'startIndex': '0',
-        'numberResults': str(max_results)
-    }
+    keyword_ideas = keyword_plan_idea_service.generate_keyword_ideas(
+        request=request
+    )
 
-    # Get keywords
-    service = adwords_client.GetService('TargetingIdeaService', version='v201809')
-    result = service.get(selector)
+    for idea in keyword_ideas:
+        competition_value = idea.keyword_idea_metrics.competition.name
+        print(
+            f'Keyword idea text "{idea.text}" has '
+            f'"{idea.keyword_idea_metrics.avg_monthly_searches}" '
+            f'average monthly searches and "{competition_value}" '
+            "competition.\n"
+        )
+    # [END generate_keyword_ideas]
 
-    # Print results
-    for idea in result['entries']:
-        keyword = idea['data'][0]['value']['value']
-        avg_monthly_searches = idea['data'][1]['value']['value']
-        competition = idea['data'][6]['value']['value']
-        
-        # Additional fields
-        ad_share = idea['data'][10]['value']['value']
-        suggested_bid = idea['data'][11]['value']['value']
-        search_volume_trend = idea['data'][12]['value']['value']
-        average_cpc = idea['data'][14]['value']['value']
-        
-        print(f"Keyword: {keyword} | Avg. Monthly Searches: {avg_monthly_searches} | Competition: {competition} | Ad Share: {ad_share} | Suggested Bid: {suggested_bid} | Search Volume Trend: {search_volume_trend} | Average CPC: {average_cpc}")
+
+def map_locations_ids_to_resource_names(client, location_ids):
+    """Converts a list of location IDs to resource names.
+
+    Args:
+        client: an initialized GoogleAdsClient instance.
+        location_ids: a list of location ID strings.
+
+    Returns:
+        a list of resource name strings using the given location IDs.
+    """
+    build_resource_name = client.get_service(
+        "GeoTargetConstantService"
+    ).geo_target_constant_path
+    return [build_resource_name(location_id) for location_id in location_ids]
 
 
 if __name__ == "__main__":
-    # Example usage
-    phrase = "your keyword phrase"
-    get_google_keyword_data(phrase)
+    # GoogleAdsClient will read the google-ads.yaml configuration file in the
+    # home directory if none is specified.
+    pdb.set_trace()
+    googleads_client = GoogleAdsClient.load_from_storage(version="v16", path='/Users/bbe0045/Documents/BlogIQ/seo/google-ads.yaml')
+
+    parser = argparse.ArgumentParser(
+        description="Generates keyword ideas from a list of seed keywords."
+    )
+
+    # The following argument(s) should be provided to run the example.
+    parser.add_argument(
+        "-c",
+        "--customer_id",
+        type=str,
+        required=True,
+        help="The Google Ads customer ID.",
+    )
+    parser.add_argument(
+        "-k",
+        "--keyword_texts",
+        nargs="+",
+        type=str,
+        required=False,
+        default=[],
+        help="Space-delimited list of starter keywords",
+    )
+    # To determine the appropriate location IDs, see:
+    # https://developers.google.com/google-ads/api/reference/data/geotargets
+    parser.add_argument(
+        "-l",
+        "--location_ids",
+        nargs="+",
+        type=str,
+        required=False,
+        default=_DEFAULT_LOCATION_IDS,
+        help="Space-delimited list of location criteria IDs",
+    )
+    # To determine the appropriate language ID, see:
+    # https://developers.google.com/google-ads/api/reference/data/codes-formats#expandable-7
+    parser.add_argument(
+        "-i",
+        "--language_id",
+        type=str,
+        required=False,
+        default=_DEFAULT_LANGUAGE_ID,
+        help="The language criterion ID.",
+    )
+    # Optional: Specify a URL string related to your business to generate ideas.
+    parser.add_argument(
+        "-p",
+        "--page_url",
+        type=str,
+        required=False,
+        help="A URL string related to your business",
+    )
+
+    args = parser.parse_args()
+
+    try:
+        pdb.set_trace()
+        main(
+            googleads_client,
+            args.customer_id,
+            args.location_ids,
+            args.language_id,
+            args.keyword_texts,
+            args.page_url,
+        )
+    except GoogleAdsException as ex:
+        print(
+            f'Request with ID "{ex.request_id}" failed with status '
+            f'"{ex.error.code().name}" and includes the following errors:'
+        )
+        for error in ex.failure.errors:
+            print(f'\tError with message "{error.message}".')
+            if error.location:
+                for field_path_element in error.location.field_path_elements:
+                    print(f"\t\tOn field: {field_path_element.field_name}")
+        sys.exit(1)
