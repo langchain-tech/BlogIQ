@@ -118,71 +118,74 @@ def map_locations_ids_to_resource_names(client, location_ids):
 if __name__ == "__main__":
     # GoogleAdsClient will read the google-ads.yaml configuration file in the
     # home directory if none is specified.
-    pdb.set_trace()
     googleads_client = GoogleAdsClient.load_from_storage(version="v16", path='/Users/bbe0045/Documents/BlogIQ/seo/google-ads.yaml')
 
-    parser = argparse.ArgumentParser(
-        description="Generates keyword ideas from a list of seed keywords."
-    )
+    # parser = argparse.ArgumentParser(
+    #     description="Generates keyword ideas from a list of seed keywords."
+    # )
 
-    # The following argument(s) should be provided to run the example.
-    parser.add_argument(
-        "-c",
-        "--customer_id",
-        type=str,
-        required=True,
-        help="The Google Ads customer ID.",
-    )
-    parser.add_argument(
-        "-k",
-        "--keyword_texts",
-        nargs="+",
-        type=str,
-        required=False,
-        default=[],
-        help="Space-delimited list of starter keywords",
-    )
-    # To determine the appropriate location IDs, see:
-    # https://developers.google.com/google-ads/api/reference/data/geotargets
-    parser.add_argument(
-        "-l",
-        "--location_ids",
-        nargs="+",
-        type=str,
-        required=False,
-        default=_DEFAULT_LOCATION_IDS,
-        help="Space-delimited list of location criteria IDs",
-    )
-    # To determine the appropriate language ID, see:
-    # https://developers.google.com/google-ads/api/reference/data/codes-formats#expandable-7
-    parser.add_argument(
-        "-i",
-        "--language_id",
-        type=str,
-        required=False,
-        default=_DEFAULT_LANGUAGE_ID,
-        help="The language criterion ID.",
-    )
-    # Optional: Specify a URL string related to your business to generate ideas.
-    parser.add_argument(
-        "-p",
-        "--page_url",
-        type=str,
-        required=False,
-        help="A URL string related to your business",
-    )
-
-    args = parser.parse_args()
-
+    # # The following argument(s) should be provided to run the example.
+    # parser.add_argument(
+    #     "-c",
+    #     '-6020275901',
+    #     type=str,
+    #     required=False,
+    #     help="The Google Ads customer ID.",
+    # )
+    # parser.add_argument(
+    #     "-k",
+    #     "--keyword_texts",
+    #     nargs="+",
+    #     type=str,
+    #     required=False,
+    #     default=[],
+    #     help="Space-delimited list of starter keywords",
+    # )
+    # # To determine the appropriate location IDs, see:
+    # # https://developers.google.com/google-ads/api/reference/data/geotargets
+    # parser.add_argument(
+    #     "-l",
+    #     "--location_ids",
+    #     nargs="+",
+    #     type=str,
+    #     required=False,
+    #     default=_DEFAULT_LOCATION_IDS,
+    #     help="Space-delimited list of location criteria IDs",
+    # )
+    # # To determine the appropriate language ID, see:
+    # # https://developers.google.com/google-ads/api/reference/data/codes-formats#expandable-7
+    # parser.add_argument(
+    #     "-i",
+    #     "--language_id",
+    #     type=str,
+    #     required=False,
+    #     default=_DEFAULT_LANGUAGE_ID,
+    #     help="The language criterion ID.",
+    # )
+    # # Optional: Specify a URL string related to your business to generate ideas.
+    # parser.add_argument(
+    #     "-p",
+    #     "--page_url",
+    #     type=str,
+    #     required=False,
+    #     help="A URL string related to your business",
+    # )
+    customer_id = "6020275901"
+    location_ids = ['1023191']
+    language_id = "1000"
+    keyword_texts = ["large language models in ai", "machine learning"]
+    page_url = "https://example.com"
+   
+    # args = parser.parse_args()
+    pdb.set_trace()
     try:
-        pdb.set_trace()
         main(
             googleads_client,
-            args.customer_id,
-            args.location_ids,
-            args.language_id,
-            args.keyword_texts,
-            args.page_url,
+            customer_id,
+            location_ids,
+            language_id,
+            keyword_texts,
+            page_url,
         )
     except GoogleAdsException as ex:
         print(

@@ -5,7 +5,10 @@
 # developer token see:                                                                   #
 # https://developers.google.com/google-ads/api/docs/first-call/dev-token                 #
 ##########################################################################################
-developer_token: npB4f9ep-F8QbbH8Lmw5Gg
+developer_token: VyEeHkw3A4qzGuulFpd52A
+
+
+
 
 # Use proto plus
 ##########################################################################################
@@ -23,9 +26,11 @@ use_proto_plus: True
 # OAuth2 flow. For more information on authenticating with OAuth2 see:                   #
 # https://developers.google.com/google-ads/api/docs/oauth/overview                       #
 ##########################################################################################
-client_id: 225370061307-gjkcvgmocijpu3papedbgmooh2rkuu5v.apps.googleusercontent.com
-client_secret: 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
-refresh_token: 1//06ZAYFazqBXswCgYIARAAGAYSNwF-L9IrjJQS2M1LsiQ-GuHhVpi1oS_DJpkMKejntH_R0SNZCnupZSlYyv54wRpTcCLUUjT6YJM
+# client_id: 332295234927-hu249rtc5qndgo51fpk4rr5h5rt6eaok.apps.googleusercontent.com
+# client_secret: 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
+
+
+# refresh_token: 1//06ZAYFazqBXswCgYIARAAGAYSNwF-L9IrjJQS2M1LsiQ-GuHhVpi1oS_DJpkMKejntH_R0SNZCnupZSlYyv54wRpTcCLUUjT6YJM
 
 # Service Account configuration
 ##########################################################################################
@@ -38,7 +43,8 @@ refresh_token: 1//06ZAYFazqBXswCgYIARAAGAYSNwF-L9IrjJQS2M1LsiQ-GuHhVpi1oS_DJpkMK
 # If you're authorizing with direct account access, then the "impersonated_email"        #
 # configuration is optional.                                                             #
 ##########################################################################################
-# json_key_file_path: INSERT_PATH_TO_JSON_KEY_FILE_HERE
+json_key_file_path: /Users/bbe0045/Documents/BlogIQ/seo/google_ads_config.json
+
 # impersonated_email: INSERT_DOMAIN_WIDE_DELEGATION_ACCOUNT
 
 # Login customer ID configuration
@@ -49,7 +55,7 @@ refresh_token: 1//06ZAYFazqBXswCgYIARAAGAYSNwF-L9IrjJQS2M1LsiQ-GuHhVpi1oS_DJpkMK
 # also specify this later in code if your application uses multiple manager account +    #
 # OAuth pairs.                                                                           #
 ##########################################################################################
-login_customer_id: 9121852221
+login_customer_id: 6020275901
 
 # Logging configuration
 ##########################################################################################

@@ -2,8 +2,14 @@ import streamlit as st
 
 ## app imports
 from api_helper.serp_api import serp_api_caller
+from seo.data_for_seo_api import get_keywords
 
+def handle_success(result):
+    print("Success:", result.data)
 
+# Function to handle failure
+def handle_failure(result):
+    print("Failure:", result.data["error"]["message"])
 
 def initialize_session_data():
     return {
@@ -52,7 +58,38 @@ def primary_details(session_data):
     else:
         st.write('No option selected')
 
-    # Update session_state
+
+    if question:
+        success_result = get_keywords(question)
+        if success_result.success:
+            st.write('Select Secondary keywords:')
+            
+            selected_rows = st.data_editor(
+                success_result.data['data'],
+                column_config={
+                    "Select": st.column_config.CheckboxColumn(
+                        "Your Keyword?",
+                        help="Select your keywords!",
+                        default=False,
+                    )
+                },
+                hide_index=True,
+            )
+
+            selected_rows = {key: [value[i] for i in range(len(value)) if selected_rows['Select'][i]] for key, value in selected_rows.items()}
+            st.write('Selected keywords:')
+                
+            st.data_editor(
+                selected_rows,
+                hide_index=True,
+                disabled=["Select"]
+            )
+            session_data['secondary_keywords'] = selected_rows
+            handle_success(success_result)
+        else:
+            handle_failure(success_result)
+            st.write(f"No keyword found for your topic on --> {question}")
+
     session_data['question'] = question
     session_data['primary_keyword'] = primary_keyword
     session_data['blog_words_limit'] = blog_words_limit

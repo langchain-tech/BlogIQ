@@ -80,8 +80,3 @@ def main(app):
             st.write(st.session_state.session_data['blog'])
             # if st.sidebar.button("Reset", key="reset"):
             #     st.session_state.session_data = initialize_session_data()
-
-    options = st.multiselect('Select Secondary keywords', ['Green', 'Yellow', 'Red', 'Blue'], [])
-
-    if options:
-        st.write('You selected:', options)
