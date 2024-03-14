@@ -1,0 +1,6 @@
+# Gemfile
+source 'https://rubygems.org'
+
+gem 'googleauth'
+gem 'google-ads-googleads'
+gem 'google-api-client', '0.9.1', require: ['google/apis/calendar_v3', 'google/apis/plus_v1']
