@@ -20,9 +20,11 @@
 require 'optparse'
 require 'google/ads/google_ads'
 
+# Load the configuration file
+ENV['HOME'] = File.join(__dir__)
+
 # [START generate_keyword_ideas]
-def generate_keyword_ideas(customer_id, location_ids, language_id, keywords,
-    page_url)
+def generate_keyword_ideas(customer_id, location_ids, language_id, keywords, page_url)
   # GoogleAdsClient will read a config file from
   # ENV['HOME']/google_ads_config.rb when called without parameters
   client = Google::Ads::GoogleAds::GoogleAdsClient.new
@@ -103,14 +105,24 @@ if __FILE__ == $0
   # code.
   #
   # Running the example with -h will print the command line usage.
-  options[:customer_id] = '9546943203'
+  options[:customer_id] = '6020275901' 
 
-  options[:location_ids] = ['INSERT_LOCATION_ID_1_HERE', 'INSERT_LOCATION_ID_2_HERE']
+  # USA: 2840
+  # UK: 2826
+  # Canada: 2868
+  # Australia: 2076
 
-  options[:language_id] = 'INSERT_LANGUAGE_ID_HERE'
+  options[:location_ids] = [2840]
+
+  # Language in the United States: "en-US"
+  # Language in the United Kingdom: "en-GB"
+  # Language in Australia: "en-AU"
+  # Language in Canada: "en-CA"
+
+  options[:language_id] = 'en-US'
 
   # Optional but recommended
-  options[:keyword_texts] = ['INSERT_KEYWORD_TEXT_1_HERE', 'INSERT_KEYWORD_TEXT_2_HERE']
+  options[:keyword_texts] = ['Large language models']
 
   # Optional: Specify a URL string related to your business to generate ideas.
   options[:page_url] = nil
