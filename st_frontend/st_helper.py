@@ -3,6 +3,7 @@ import streamlit as st
 ## app imports
 from api_helper.serp_api import serp_api_caller
 from seo.data_for_seo_api import get_keywords
+from llm_keyword_fetcher.llm_generator import call_llm
 
 ### Uncomment import 'pdb' this to use debugger in the app
 ### Use this code in between any file or function to stop debugger at any point pdb.set_trace()
@@ -51,6 +52,13 @@ def primary_details(session_data):
 
     question = st.text_input("Enter your topic name:", session_data['question'])
     primary_keyword = st.text_input("Enter primary keyword:", session_data['primary_keyword'])
+    if question and primary_keyword and st.button('Fetch Secondary keywords:'):
+        keywords = call_llm(question, primary_keyword)
+        session_data['keywords'] = keywords
+
+    if 'keywords' in session_data:
+        selected_meta_keywords = st.multiselect("Select Secondary Keywords", session_data['keywords'])
+        session_data['selected_meta_keywords'] = (selected_meta_keywords or session_data['selected_meta_keywords'])
     blog_words_limit_options = ['500 - 1000', '1000 - 1500', '1500 - 2000', '2000 - 2500']
     blog_words_limit_index = blog_words_limit_options.index(session_data['blog_words_limit'] or '500 - 1000')
 
@@ -109,6 +117,7 @@ def generate_structure_form(session_data):
     st.title("Generate Structure:")
     additional_context = st.text_area("Enter additional context for Structure:", session_data['additional_context'])
     session_data['additional_context'] = additional_context
+    st.write(f"Selected keywords --> {session_data['selected_meta_keywords']}")
 
 def convert_to_title_case(input_string):
     words = input_string.split('_')

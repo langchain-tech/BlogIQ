@@ -86,6 +86,7 @@ def retrieve(state):
     blog_words_limit = state_dict["blog_words_limit"]
     urls = state_dict["urls"]
     step_to_execute = state_dict["step_to_execute"]
+    selected_meta_keywords = state_dict["selected_meta_keywords"]
 
     if 'blog_title' in state_dict:
         blog_title = state_dict["blog_title"]
@@ -142,7 +143,8 @@ def retrieve(state):
                     "rephrase_context": rephrase_context,
                     "rephrase": rephrase,
                     "blog": blog,
-                    "blog_title": blog_title
+                    "blog_title": blog_title,
+                    "selected_meta_keywords": selected_meta_keywords
 
                 }
             }
@@ -217,11 +219,12 @@ def generate(state):
     rephrase = state_dict["rephrase"]
     blog = state_dict["blog"]
     blog_title = state_dict["blog_title"]
+    selected_meta_keywords = state_dict['selected_meta_keywords']
 
     if step_to_execute == "Generate Structure":
         heading = ''
         template = structure_template()
-        prompt = PromptTemplate(template=template, input_variables=["documents", "question", "additional_context", "primary_keyword", "blog_structure"])
+        prompt = PromptTemplate(template=template, input_variables=["documents", "question", "additional_context", "primary_keyword", "blog_structure", "selected_meta_keywords"])
     elif rephrase == True:
         template = feedback_content_template()
         prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "blog_words_limit", "refference_links", "rephrase_context", "blog"])
@@ -246,6 +249,7 @@ def generate(state):
                 "blog_words_limit": blog_words_limit,
                 "refference_links": urls,
                 "blog_structure": blog_structure,
+                "selected_meta_keywords": selected_meta_keywords
             }
         )
         print("------- Structure Generated -------")
