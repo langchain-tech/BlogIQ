@@ -34,6 +34,7 @@ from langchain_community.embeddings import OllamaEmbeddings
 from st_frontend.frontend import main
 from prompts.content_prompt import content_template
 from prompts.structure_prompt import structure_template
+from prompts.feedback_content_prompt import feedback_content_template
 
 ### Uncomment import 'pdb' this to use debugger in the app
 ### Use this code in between any file or function to stop debugger at any point pdb.set_trace()
@@ -86,6 +87,26 @@ def retrieve(state):
     urls = state_dict["urls"]
     step_to_execute = state_dict["step_to_execute"]
 
+    if 'blog_title' in state_dict:
+        blog_title = state_dict["blog_title"]
+    else:
+        blog_title = ''
+
+    if 'blog' in state_dict:
+        blog = state_dict["blog"]
+    else:
+        blog = ''
+
+    if 'rephrase_context' in state_dict:
+        rephrase_context = state_dict["rephrase_context"]
+    else:
+        rephrase_context = ''
+
+    if 'rephrase' in state_dict:
+        rephrase = state_dict["rephrase"]
+    else:
+        rephrase = ''
+
     if 'structure' in state_dict:
         structure = state_dict["structure"]
     else:
@@ -117,7 +138,11 @@ def retrieve(state):
                     "step_to_execute": step_to_execute,
                     "structure": structure,
                     "collection_key": collection_key,
-                    "heading": heading
+                    "heading": heading,
+                    "rephrase_context": rephrase_context,
+                    "rephrase": rephrase,
+                    "blog": blog,
+                    "blog_title": blog_title
 
                 }
             }
@@ -187,15 +212,23 @@ def generate(state):
     collection_key = state_dict["collection_key"]
     step_to_execute = state_dict["step_to_execute"]
     structure = state_dict["structure"]
+    heading = state_dict["heading"]
+    rephrase_context = state_dict["rephrase_context"]
+    rephrase = state_dict["rephrase"]
+    blog = state_dict["blog"]
+    blog_title = state_dict["blog_title"]
 
     if step_to_execute == "Generate Structure":
         heading = ''
         template = structure_template()
         prompt = PromptTemplate(template=template, input_variables=["documents", "question", "additional_context", "primary_keyword", "blog_structure"])
+    elif rephrase == True:
+        template = feedback_content_template()
+        prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "blog_words_limit", "refference_links", "rephrase_context", "blog"])
     elif step_to_execute == "Generate Content":
         heading = state_dict["heading"]
         template = content_template()
-        prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "blog_words_limit", "refference_links", "heading"])
+        prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "blog_words_limit", "refference_links", "heading", "blog_title"])
 
     llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=0.7, streaming=True, max_tokens=4096)
     # llm = ChatOllama(model="llama2:latest")
@@ -212,10 +245,26 @@ def generate(state):
                 "primary_keyword": primary_keyword,
                 "blog_words_limit": blog_words_limit,
                 "refference_links": urls,
-                "blog_structure": blog_structure
+                "blog_structure": blog_structure,
             }
         )
         print("------- Structure Generated -------")
+
+    elif rephrase == True:
+        generation = rag_chain.invoke(
+            {
+                "documents": documents,
+                "primary_keyword": primary_keyword,
+                "blog_words_limit": blog_words_limit,
+                "refference_links": urls,
+                "structure": structure,
+                "heading": heading,
+                "blog": blog,
+                "blog_title": blog_title,
+                "rephrase_context": rephrase_context
+            }
+        )
+        print("------- Content Rephrased -------")
 
     elif step_to_execute == "Generate Content":
         generation = rag_chain.invoke(
@@ -225,7 +274,9 @@ def generate(state):
                 "blog_words_limit": blog_words_limit,
                 "refference_links": urls,
                 "structure": structure,
-                "heading": heading
+                "heading": heading,
+                "blog": blog,
+                "blog_title": blog_title
             }
         ) 
         print("------- Content Generated -------")

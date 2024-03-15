@@ -1,6 +1,7 @@
 import ast
 import time
 import streamlit as st
+from api_helper.ghost_api import post_blog
 from st_frontend.st_helper import initialize_session_data, primary_details, generate_structure_form, convert_to_title_case
 
 ### Uncomment import 'pdb' this to use debugger in the app
@@ -17,7 +18,6 @@ def main(app):
 
     if current_step == "Primary Details":
         primary_details(st.session_state.session_data)
-
     elif current_step == "Generate Structure":
         output = ''
         generate_structure_form(st.session_state.session_data)
@@ -57,26 +57,62 @@ def main(app):
         structure_text = context['structure']
         parsed_structure = ast.literal_eval(structure_text)
         headings = parsed_structure[context['selected_blog']]['headings']
+        title = parsed_structure[context['selected_blog']]['title']
         st.write(f"## Question :--> {context['question']}")
         st.write(f"## Primary Keyword :--> {context['primary_keyword']}")
         st.write(f"## Word Limit :--> {context['blog_words_limit']} approx.")
         st.write(f"## Additional Context :--> {context['additional_context']}")
-        st.write(f"## Blog Title :--> {parsed_structure[context['selected_blog']]['title']}")
+        st.write(f"## Blog Title :--> {title}")
         for heading in headings:
             st.write(heading)
 
         if st.button("Generate Blog Content"):
+            context['rephrase'] = False
             content = ''
+            st.markdown(f"<h1>{parsed_structure[context['selected_blog']]['title']}</h1>", unsafe_allow_html=True)
             for heading in headings:
                 context['heading'] = heading
+                context['blog_title'] = title
                 time.sleep(20)
                 output = app.invoke({"keys": context})
                 current_heading_content = output["keys"]["blog"]
-                st.write(f"## {heading}\n\n{current_heading_content}\n\n")
-                content += f"## {heading}\n\n{current_heading_content}\n\n"
+                content += f"{current_heading_content}\n\n"
                 st.session_state.session_data['blog'] = content
+                st.markdown(f"{current_heading_content}\n\n", unsafe_allow_html=True)
+
+            content = st.text_area("Enter your feedback to rephrase content:", height=300)
+            if content and st.button("Click to rephrase content"):
+                context['rephrase'] = True
+                context['rephrase_context'] = content
+                context['blog'] = st.session_state.session_data['blog']
+                content = app.invoke({"keys": context})
+
+            content = st.text_area("Edit Blog Content", value=content, height=600)
+
+            if st.button("Save Changes!!!"):
+                st.session_state.session_data['blog'] = content
+
+            if st.button("Post Blog to Blog WebiSte"):
+                response = post_blog(parsed_structure[context['selected_blog']]['title'], content)
         else:
-            # context
-            st.write(st.session_state.session_data['blog'])
+            st.markdown(f"<h1>{parsed_structure[context['selected_blog']]['title']}</h1>", unsafe_allow_html=True)
+            st.markdown(st.session_state.session_data['blog'], unsafe_allow_html=True)
+
+            content = st.text_area("Enter your feedback to rephrase content:", height=300)
+            if content and st.button("Click to rephrase content"):
+                context['rephrase'] = True
+                context['rephrase_context'] = content
+                context['blog'] = st.session_state.session_data['blog']
+                content = app.invoke({"keys": context})
+                print(content["keys"]["blog"])
+                st.session_state.session_data['blog'] = content["keys"]["blog"]
+
+            content = st.text_area("Edit Blog Content", value=st.session_state.session_data['blog'], height=600)
+            if st.button("Save Changes!!!"):
+                st.session_state.session_data['blog'] = content
+
+            if st.button("Post Blog to `langchain.ca`"):
+                response = post_blog(parsed_structure[context['selected_blog']]['title'], content)
+
             # if st.sidebar.button("Reset", key="reset"):
             #     st.session_state.session_data = initialize_session_data()
