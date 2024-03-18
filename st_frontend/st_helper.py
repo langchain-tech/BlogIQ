@@ -25,7 +25,8 @@ def initialize_session_data():
         'additional_context': "",
         'selected_meta_keywords': [],
         'secondary_keywords': [],
-        'selected_keywords': []
+        'selected_keywords': [],
+        'manual_keywords': []
     }
 
 def handle_urls():
@@ -115,11 +116,16 @@ def primary_details(session_data):
             disabled=["Select"]
         )
         session_data['secondary_keywords'] = selected_rows
-    
+
+    manual_keywords = st.text_input("Enter Manual Keywords (comma separated):")
+    if manual_keywords:
+        manual_keywords = manual_keywords.split(',')
+        session_data['manual_keywords'] = manual_keywords
+
     if selected_rows:
-        selected_keywords = set(selected_rows['keyword'] + list(session_data['selected_meta_keywords']) + list(session_data['selected_keywords']))
+        selected_keywords = set(session_data['manual_keywords'] + selected_rows['keyword'] + list(session_data['selected_meta_keywords']) + list(session_data['selected_keywords']))
     else:
-        selected_keywords = set(list(session_data['selected_meta_keywords']) + list(session_data['selected_keywords']))
+        selected_keywords = set(session_data['manual_keywords'] + list(session_data['selected_meta_keywords']) + list(session_data['selected_keywords']))
 
     if st.button("Reset Selected keywords"):
         selected_rows['keyword'] = []
