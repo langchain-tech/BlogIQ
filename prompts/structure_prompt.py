@@ -5,7 +5,7 @@ def structure_template():
     Additional commands need to follow -->
     {additional_context}
 
-    You need to use these seo friendly meta keywords for genrating strcuture of blog --> {selected_meta_keywords}
+    You need to use these seo friendly meta keywords for genrating strcuture of blog --> {selected_keywords}
 
     Here is the knowledge base for better understanding quality content blog --> {documents}
     NOTE --> Provide at least three sets of structure with different variations in heading.

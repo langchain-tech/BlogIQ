@@ -86,7 +86,7 @@ def retrieve(state):
     blog_words_limit = state_dict["blog_words_limit"]
     urls = state_dict["urls"]
     step_to_execute = state_dict["step_to_execute"]
-    selected_meta_keywords = state_dict["selected_meta_keywords"]
+    selected_keywords = state_dict["selected_keywords"]
 
     if 'blog_title' in state_dict:
         blog_title = state_dict["blog_title"]
@@ -144,7 +144,7 @@ def retrieve(state):
                     "rephrase": rephrase,
                     "blog": blog,
                     "blog_title": blog_title,
-                    "selected_meta_keywords": selected_meta_keywords
+                    "selected_keywords": selected_keywords
 
                 }
             }
@@ -219,19 +219,19 @@ def generate(state):
     rephrase = state_dict["rephrase"]
     blog = state_dict["blog"]
     blog_title = state_dict["blog_title"]
-    selected_meta_keywords = state_dict['selected_meta_keywords']
+    selected_keywords = state_dict['selected_keywords']
 
     if step_to_execute == "Generate Structure":
         heading = ''
         template = structure_template()
-        prompt = PromptTemplate(template=template, input_variables=["documents", "question", "additional_context", "primary_keyword", "blog_structure", "selected_meta_keywords"])
+        prompt = PromptTemplate(template=template, input_variables=["documents", "question", "additional_context", "primary_keyword", "blog_structure", "selected_keywords"])
     elif rephrase == True:
         template = feedback_content_template()
         prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "blog_words_limit", "refference_links", "rephrase_context", "blog"])
     elif step_to_execute == "Generate Content":
         heading = state_dict["heading"]
         template = content_template()
-        prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "blog_words_limit", "refference_links", "heading", "blog_title"])
+        prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "blog_words_limit", "refference_links", "heading", "blog_title", "selected_keywords"])
 
     llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=0.7, streaming=True, max_tokens=4096)
     # llm = ChatOllama(model="llama2:latest")
@@ -249,7 +249,7 @@ def generate(state):
                 "blog_words_limit": blog_words_limit,
                 "refference_links": urls,
                 "blog_structure": blog_structure,
-                "selected_meta_keywords": selected_meta_keywords
+                "selected_keywords": selected_keywords
             }
         )
         print("------- Structure Generated -------")
@@ -280,7 +280,8 @@ def generate(state):
                 "structure": structure,
                 "heading": heading,
                 "blog": blog,
-                "blog_title": blog_title
+                "blog_title": blog_title,
+                "selected_keywords": selected_keywords
             }
         ) 
         print("------- Content Generated -------")

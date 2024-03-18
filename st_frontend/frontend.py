@@ -9,6 +9,7 @@ from st_frontend.st_helper import initialize_session_data, primary_details, gene
 import pdb
 
 def main(app):
+    st.set_page_config(page_title='AI Blog Generator', page_icon=None, layout="centered", initial_sidebar_state="auto", menu_items=None)
     st.sidebar.title("Blog Generator for SEO")
 
     if 'session_data' not in st.session_state:
@@ -62,7 +63,14 @@ def main(app):
         st.write(f"## Primary Keyword :--> {context['primary_keyword']}")
         st.write(f"## Word Limit :--> {context['blog_words_limit']} approx.")
         st.write(f"## Additional Context :--> {context['additional_context']}")
+        st.write(f"## Selected Meta Keywords :-->")
+        st.write("<ul>", unsafe_allow_html=True)
+        for keyword in context['selected_keywords']:
+            st.write(f"<li>{keyword}</li>",unsafe_allow_html=True)
+        st.write("</ul>", unsafe_allow_html=True)
+
         st.write(f"## Blog Title :--> {title}")
+
         for heading in headings:
             st.write(heading)
 
@@ -80,10 +88,10 @@ def main(app):
                 st.session_state.session_data['blog'] = content
                 st.markdown(f"{current_heading_content}\n\n", unsafe_allow_html=True)
 
-            content = st.text_area("Enter your feedback to rephrase content:", height=300)
-            if content and st.button("Click to rephrase content"):
+            re_content = st.text_area("Enter your feedback to rephrase content:", height=300)
+            if re_content and st.button("Click to rephrase content"):
                 context['rephrase'] = True
-                context['rephrase_context'] = content
+                context['rephrase_context'] = re_content
                 context['blog'] = st.session_state.session_data['blog']
                 content = app.invoke({"keys": context})
 

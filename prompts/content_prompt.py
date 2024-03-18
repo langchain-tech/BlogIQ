@@ -8,6 +8,7 @@ def content_template():
     Here is the knowledge base for better understanding quality content blog --> {documents}
     Important Command --> You need to write atleast 200 words for the given topic.
 
+    Here is the meta seo keywords :--> {selected_keywords}. You need to use them in the content to make the content seo freiendly.
     NOTE: Please provide content in proper <h2>, <p>, <ul>, <li>, <ol>, <b>, <i> and other required html tags.
     NOTE: Do not use same text for heading again and again. Make you dont use keywords like 'introduction'
     """
