@@ -1,4 +1,5 @@
 import streamlit as st
+import pycountry
 
 ## app imports
 from api_helper.serp_api import serp_api_caller
@@ -8,6 +9,8 @@ from llm_keyword_fetcher.llm_generator import call_llm
 ### Uncomment import 'pdb' this to use debugger in the app
 ### Use this code in between any file or function to stop debugger at any point pdb.set_trace()
 import pdb
+
+country_names = [country.name for country in pycountry.countries]
 
 def handle_success(result):
     print("Success:", result.data)
@@ -26,7 +29,12 @@ def initialize_session_data():
         'selected_meta_keywords': [],
         'secondary_keywords': [],
         'selected_keywords': [],
-        'manual_keywords': []
+        'manual_keywords': [],
+        'country': 'United States',
+        'selected_urls': [],
+        'keyword': [],
+        'blog': '',
+        'selected_headings': ''
     }
 
 def handle_urls():
@@ -56,11 +64,12 @@ def primary_details(session_data):
 
     question = st.text_input("Enter your topic name:", session_data['question'])
     primary_keyword = st.text_input("Enter primary keyword:", session_data['primary_keyword'])
-
+    selected_country = st.selectbox("Select a country", country_names)
     blog_words_limit_options = ['500 - 1000', '1000 - 1500', '1500 - 2000', '2000 - 2500']
     blog_words_limit_index = blog_words_limit_options.index(session_data['blog_words_limit'] or '500 - 1000')
 
     blog_words_limit = st.radio('Blog size in number of words:', blog_words_limit_options, index=blog_words_limit_index)
+    list(pycountry.countries)
     
     option = st.radio('Select an option:', ['Use Serpi Api', 'Use Custom Urls', 'Use Both of them'])
 
@@ -70,6 +79,8 @@ def primary_details(session_data):
             session_data['urls'] = urls
     st.write(session_data['urls'])
     session_data['option'] = option
+    selected_urls = st.multiselect("Select Urls", session_data['urls'])
+
 
     if question and primary_keyword and st.button('Fetch Secondary keywords Using LLM:'):
         keywords = call_llm(question, primary_keyword)
@@ -96,15 +107,10 @@ def primary_details(session_data):
 
     if 'sec_keywords' in session_data:
         st.write('Select Secondary keywords:')
+        data = session_data['sec_keywords'].reindex(columns=['Select', 'keyword', 'search_volume', 'competition', 'competition_level', 'cpc', 'language_code'])
         selected_rows = st.data_editor(
-            session_data['sec_keywords'],
-            column_config={
-                "Select": st.column_config.CheckboxColumn(
-                    "Your Keyword?",
-                    help="Select your keywords!",
-                    default=False,
-                )
-            },
+            data,
+            num_rows="dynamic",
             hide_index=True,
         )
 
@@ -128,7 +134,8 @@ def primary_details(session_data):
         selected_keywords = set(session_data['manual_keywords'] + list(session_data['selected_meta_keywords']) + list(session_data['selected_keywords']))
 
     if st.button("Reset Selected keywords"):
-        selected_rows['keyword'] = []
+        if selected_rows:
+            selected_rows['keyword'] = []
         session_data['selected_meta_keywords'] = []
         selected_keywords = []
 
@@ -142,19 +149,24 @@ def primary_details(session_data):
     session_data['question'] = question
     session_data['primary_keyword'] = primary_keyword
     session_data['blog_words_limit'] = blog_words_limit
+    session_data['country'] = selected_country
+    if selected_urls:
+        session_data['selected_urls'] = selected_urls
 
-    return question, primary_keyword, blog_words_limit, session_data['urls']
+    return question, primary_keyword, blog_words_limit, session_data['urls'], session_data['selected_urls']
 
 def generate_structure_form(session_data):
     st.title("Generate Structure:")
     additional_context = st.text_area("Enter additional context for Structure:", session_data['additional_context'])
     session_data['additional_context'] = additional_context
+    st.write(f"## Country --> {session_data['country']}")
+    st.write(f"## Selected Serp Urls -->")
+    st.write(session_data['selected_urls'])
     st.write(f"## Selected Meta Keywords :-->")
     st.write("<ul>", unsafe_allow_html=True)
     for keyword in session_data['selected_keywords']:
         st.write(f"<li>{keyword}</li>",unsafe_allow_html=True)
     st.write("</ul>", unsafe_allow_html=True)
-
 
 def convert_to_title_case(input_string):
     words = input_string.split('_')
