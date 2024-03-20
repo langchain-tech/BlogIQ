@@ -1,16 +1,20 @@
 import streamlit as st
 import pycountry
+import types
+
 
 ## app imports
 from api_helper.serp_api import serp_api_caller
-from seo.data_for_seo_api import get_keywords
+from seo.data_for_seo_api import get_keywords, get_serp_urls
 from llm_keyword_fetcher.llm_generator import call_llm
 
 ### Uncomment import 'pdb' this to use debugger in the app
 ### Use this code in between any file or function to stop debugger at any point pdb.set_trace()
 import pdb
 
-country_names = [country.name for country in pycountry.countries]
+# country_names = [country.name for country in pycountry.countries]
+locations = {'Algeria': 2012, 'Angola': 2024, 'Azerbaijan': 2031, 'Argentina': 2032, 'Australia': 2036, 'Austria': 2040, 'Bahrain': 2048, 'Bangladesh': 2050, 'Armenia': 2051, 'Belgium': 2056, 'Bolivia': 2068, 'Brazil': 2076, 'Bulgaria': 2100, 'Myanmar (Burma)': 2104, 'Cambodia': 2116, 'Cameroon': 2120, 'Canada': 2124, 'Sri Lanka': 2144, 'Chile': 2152, 'Taiwan': 2158, 'Colombia': 2170, 'Costa Rica': 2188, 'Croatia': 2191, 'Cyprus': 2196, 'Czechia': 2203, 'Denmark': 2208, 'Ecuador': 2218, 'El Salvador': 2222, 'Estonia': 2233, 'Finland': 2246, 'France': 2250, 'Germany': 2276, 'Ghana': 2288, 'Greece': 2300, 'Guatemala': 2320, 'Hong Kong': 2344, 'Hungary': 2348, 'India': 2356, 'Indonesia': 2360, 'Ireland': 2372, 'Israel': 2376, 'Italy': 2380, "Cote d'Ivoire": 2384, 'Japan': 2392, 'Kazakhstan': 2398, 'Jordan': 2400, 'Kenya': 2404, 'South Korea': 2410, 'Latvia': 2428, 'Lithuania': 2440, 'Malaysia': 2458, 'Malta': 2470, 'Mexico': 2484, 'Morocco': 2504, 'Netherlands': 2528, 'New Zealand': 2554, 'Nicaragua': 2558, 'Nigeria': 2566, 'Norway': 2578, 'Pakistan': 2586, 'Panama': 2591, 'Paraguay': 2600, 'Peru': 2604, 'Philippines': 2608, 'Poland': 2616, 'Portugal': 2620, 'Romania': 2642, 'Saudi Arabia': 2682, 'Senegal': 2686, 'Serbia': 2688, 'Singapore': 2702, 'Slovakia': 2703, 'Vietnam': 2704, 'Slovenia': 2705, 'South Africa': 2710, 'Spain': 2724, 'Sweden': 2752, 'Switzerland': 2756, 'Thailand': 2764, 'United Arab Emirates': 2784, 'Tunisia': 2788, 'Turkiye': 2792, 'Ukraine': 2804, 'North Macedonia': 2807, 'Egypt': 2818, 'United Kingdom': 2826, 'United States': 2840, 'Burkina Faso': 2854, 'Uruguay': 2858, 'Venezuela': 2862}
+frozen_locations = types.MappingProxyType(locations)
 
 def handle_success(result):
     print("Success:", result.data)
@@ -50,11 +54,15 @@ def handle_urls():
 
 def handle_serp_api(option, question, session_data):
     if option == 'Use Serpi Api' and question:
-        return serp_api_caller(question)
+        response = get_serp_urls(question, session_data['country'])
+        # return serp_api_caller(question)
+        return response.data['data']
     elif option == 'Use Custom Urls':
         return handle_urls()
     elif option == 'Use Both of them' and question:
-        return (handle_urls() + serp_api_caller(question))
+        # return (handle_urls() + serp_api_caller(question))
+        response = get_serp_urls(question, session_data['country'])
+        return (handle_urls() + response.data['data'])
     else:
         st.write('No option selected')
 
@@ -64,23 +72,22 @@ def primary_details(session_data):
 
     question = st.text_input("Enter your topic name:", session_data['question'])
     primary_keyword = st.text_input("Enter primary keyword:", session_data['primary_keyword'])
-    selected_country = st.selectbox("Select a country", country_names)
+    selected_country = st.selectbox("Select a country", frozen_locations.keys())
     blog_words_limit_options = ['500 - 1000', '1000 - 1500', '1500 - 2000', '2000 - 2500']
     blog_words_limit_index = blog_words_limit_options.index(session_data['blog_words_limit'] or '500 - 1000')
 
     blog_words_limit = st.radio('Blog size in number of words:', blog_words_limit_options, index=blog_words_limit_index)
-    list(pycountry.countries)
-    
+    session_data['country'] = frozen_locations[selected_country]
     option = st.radio('Select an option:', ['Use Serpi Api', 'Use Custom Urls', 'Use Both of them'])
 
     if (session_data['urls'] == []) or (session_data['option'] != option):
         urls = handle_serp_api(option, question, session_data)
         if urls:
             session_data['urls'] = urls
+    
+    selected_urls = st.multiselect("Select Urls", session_data['urls'])
     st.write(session_data['urls'])
     session_data['option'] = option
-    selected_urls = st.multiselect("Select Urls", session_data['urls'])
-
 
     if question and primary_keyword and st.button('Fetch Secondary keywords Using LLM:'):
         keywords = call_llm(question, primary_keyword)
@@ -96,7 +103,7 @@ def primary_details(session_data):
             session_data['selected_meta_keywords'] = selected_meta_keywords
     selected_rows = ''
     if st.button("Fetch keywords from DataForSeo"):
-        success_result = get_keywords(primary_keyword)
+        success_result = get_keywords(primary_keyword, frozen_locations[selected_country])
         if success_result.success:
             sec_keywords = success_result.data['data']
             session_data['sec_keywords'] = sec_keywords
@@ -149,7 +156,6 @@ def primary_details(session_data):
     session_data['question'] = question
     session_data['primary_keyword'] = primary_keyword
     session_data['blog_words_limit'] = blog_words_limit
-    session_data['country'] = selected_country
     if selected_urls:
         session_data['selected_urls'] = selected_urls
 
