@@ -23,7 +23,6 @@ def main(app):
     current_step = st.sidebar.radio("Step to create a Blog:", ["Primary Details", "Generate Structure", "Generate Content"])
 
     if current_step == "Primary Details":
-        print("testststststs", st.session_state.session_data)
         primary_details(st.session_state.session_data)
     elif current_step == "Generate Structure":
         output = ''
@@ -51,18 +50,16 @@ def main(app):
             titles = [value['title'] for value in data.values()]
             title = st.selectbox("Select Title", titles)
             all_headings = [heading for value in data.values() for heading in value['headings']]
+
+            manual_headings = st.text_input("Enter Manual headings (comma separated):")
+            manual_headings = manual_headings.split(',')
+            st.session_state.session_data['manual_headings'] = manual_headings
+
+            if manual_headings:
+                all_headings = all_headings + manual_headings
+
+
             selected_headings = st.multiselect('Select Headings', all_headings)
-
-            # for key, value in data.items():
-            #     selected_headings = st.multiselect(f"Select headings for {value['title']}", value['headings'], default=[], key=key)
-            #     # You can use the selected headings as needed in your application
-            #     st.write(selected_headings)
-
-
-            # for key, value in data.items():
-            #     for heading in value['headings']:
-            #         st.write(heading)
-
             if st.button("Reset Headings"):
                 st.session_state.session_data['selected_headings'] = []
 
