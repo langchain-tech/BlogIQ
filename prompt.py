@@ -3,7 +3,7 @@ def get_structure_template():
     Please provide me structure of blog of on {question}, must have a structure, must have good headings and must have 10 headings.
     Important Commands --> Need to provide a good title and its must contain the key word --> {primary_keyword}
     Additional commands need to follow -->
-    {additional_context}
+    {structure_prompt}
 
     Here is the knowledge base for better understanding quality content blog --> {documents}
     NOTE --> Provide at least three sets of structure with different variations in heading.
@@ -49,7 +49,7 @@ def get_content_generator_template():
 
 #     I'll be provided with documents to review and understand the topics we'll be covering. Additionally, I'll provide meta keywords that we need to incorporate to enhance our ranking on Google search.
 
-#     Here is the documents (knowledge base) that you need to utilise to write blog --> {documents}, primary meta keywords --> {primary_keyword} & here is addtional context ---> {additional_context}
+#     Here is the documents (knowledge base) that you need to utilise to write blog --> {documents}, primary meta keywords --> {primary_keyword} & here is addtional context ---> {structure_prompt}
 #     """
 #     return template
 
@@ -59,7 +59,7 @@ def get_content_generator_template():
         
 #         Additional Context:
 
-#         {additional_context}
+#         {structure_prompt}
 
 #         Meta Keywords:
 #         {keywords_string}

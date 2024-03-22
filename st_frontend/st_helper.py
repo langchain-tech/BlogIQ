@@ -27,9 +27,8 @@ def initialize_session_data():
     return {
         'question': "",
         'primary_keyword': "",
-        'blog_words_limit': "",
         'urls': [],
-        'additional_context': "",
+        'structure_prompt': "",
         'selected_meta_keywords': [],
         'secondary_keywords': [],
         'selected_keywords': [],
@@ -38,7 +37,12 @@ def initialize_session_data():
         'selected_urls': [],
         'keyword': [],
         'blog': '',
-        'selected_headings': ''
+        'selected_headings': '',
+        'gen_step': '',
+        'blog_title': '',
+        'blog_prompt': '',
+        'faq_prompt': '',
+        'faqs': ''
     }
 
 def handle_urls():
@@ -68,15 +72,11 @@ def handle_serp_api(option, question, session_data):
 
 
 def primary_details(session_data):
-    st.title("Primary Details to generate a blog:")
+    st.title("Primary Details For Content Generation:")
 
     question = st.text_input("Enter your topic name:", session_data['question'])
     primary_keyword = st.text_input("Enter primary keyword:", session_data['primary_keyword'])
-    selected_country = st.selectbox("Select a country", frozen_locations.keys())
-    blog_words_limit_options = ['500 - 1000', '1000 - 1500', '1500 - 2000', '2000 - 2500']
-    blog_words_limit_index = blog_words_limit_options.index(session_data['blog_words_limit'] or '500 - 1000')
-
-    blog_words_limit = st.radio('Blog size in number of words:', blog_words_limit_options, index=blog_words_limit_index)
+    selected_country = st.selectbox("Select a country", ['United States'])
     session_data['country'] = frozen_locations[selected_country]
     option = st.radio('Select an option:', ['Use Serpi Api', 'Use Custom Urls', 'Use Both of them'])
 
@@ -155,16 +155,14 @@ def primary_details(session_data):
     session_data['selected_keywords'] = selected_keywords
     session_data['question'] = question
     session_data['primary_keyword'] = primary_keyword
-    session_data['blog_words_limit'] = blog_words_limit
     if selected_urls:
         session_data['selected_urls'] = selected_urls
 
-    return question, primary_keyword, blog_words_limit, session_data['urls'], session_data['selected_urls']
+    return question, primary_keyword, session_data['urls'], session_data['selected_urls']
 
 def generate_structure_form(session_data):
-    st.title("Generate Structure:")
-    additional_context = st.text_area("Enter additional context for Structure:", session_data['additional_context'])
-    session_data['additional_context'] = additional_context
+    structure_prompt = st.text_area("Enter Prompt for Structure Generation:", session_data['structure_prompt'])
+    session_data['structure_prompt'] = structure_prompt
     st.write(f"## Country --> {session_data['country']}")
     st.write(f"## Selected Serp Urls -->")
     st.write(session_data['selected_urls'])

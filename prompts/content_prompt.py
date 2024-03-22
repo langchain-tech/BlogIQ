@@ -6,7 +6,7 @@ import pdb
 def content_template(blog):
     template = """
     NOTE: I NEED 100 PERCENT PLAGIARISM FREE CONTENT. DO NOT DIRECTLY COPY AND PASTE FROM KNOWLWDGE PROVIDED BELOW.
-
+    {blog_prompt}
     You are a world class writer of blogs and articles and your name is Michael. You Will get the heading and can make subheadings as per your way of writing.
     Here is the title of the blog --> {blog_title}
     Here is the heading on that you need to write content and it should be a <h2> --> {heading}
@@ -26,6 +26,11 @@ def content_template(blog):
 
 def content(blog):
     if blog:
-        return "/nHere is the already written content for blog and you need to take care to no make headings and content duplicate. --> BLOG: {blog_content}/n"
+        return "/nWill provide you the already wriiten  blog and you need to take care to not make headings and content duplicate at any cost. --> Already Written BLOG: {blog_content}/n"
     else:
         return '/n'
+
+
+
+
+#Here is the user commands for generation of blog --> {structure_prompt}
