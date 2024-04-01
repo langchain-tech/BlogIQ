@@ -88,6 +88,17 @@ def retrieve(state):
     step_to_execute = state_dict["step_to_execute"]
     selected_keywords = state_dict["selected_keywords"]
 
+
+    if 'total_headings' in state_dict:
+        total_headings = state_dict['total_headings']
+    else:
+        total_headings = ''
+
+    if 'current_heading' in state_dict:
+        current_heading = state_dict['current_heading']
+    else:
+        current_heading = ''
+
     if 'faq_prompt' in state_dict:
         faq_prompt = state_dict['faq_prompt']
     else:
@@ -168,7 +179,9 @@ def retrieve(state):
                     "blog_content": blog_content,
                     "number_of_words_per_heading": number_of_words_per_heading,
                     "blog_prompt": blog_prompt,
-                    "faq_prompt": faq_prompt
+                    "faq_prompt": faq_prompt,
+                    "total_headings": total_headings,
+                    "current_heading": current_heading
 
                 }
             }
@@ -247,6 +260,9 @@ def generate(state):
     number_of_words_per_heading = state_dict['number_of_words_per_heading']
     blog_prompt = state_dict['blog_prompt']
     faq_prompt = state_dict['faq_prompt']
+    total_headings = state_dict['total_headings']
+    current_heading = state_dict['current_heading']
+    print(state_dict)
 
     if step_to_execute == "Generate Structure":
         heading = ''
@@ -258,18 +274,17 @@ def generate(state):
     elif step_to_execute == "Generate Blog":
         heading = state_dict["heading"]
         template = content_template(blog_content)
-        prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "number_of_words_per_heading", "refference_links", "heading", "blog_title", "selected_keywords", "blog_content", "blog_prompt"])
+        prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "number_of_words_per_heading", "refference_links", "heading", "blog_title", "selected_keywords", "blog_content", "blog_prompt", "total_headings", "current_heading"])
     elif step_to_execute == "Generate Faq's":
         template = faq_template()
         prompt = PromptTemplate(template=template, input_variables=["documents", "primary_keyword", "selected_keywords", "faq_prompt"])
 
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=0.7, streaming=True, max_tokens=4096)
+    llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=0.7, streaming=True, max_tokens=4096, verbose=True)
     # llm = ChatOllama(model="llama2:latest")
-    def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
     rag_chain = prompt | llm | StrOutputParser()
 
     if step_to_execute == "Generate Structure":
+
         generation = rag_chain.invoke(
             {
                 "documents": documents,
@@ -281,6 +296,7 @@ def generate(state):
                 "selected_keywords": selected_keywords
             }
         )
+        pdb.set_trace()
         print("------- Structure Generated -------")
 
     elif rephrase == True:
@@ -312,7 +328,9 @@ def generate(state):
                 "selected_keywords": selected_keywords,
                 "blog_content": blog_content,
                 "number_of_words_per_heading": number_of_words_per_heading,
-                "blog_prompt": blog_prompt
+                "blog_prompt": blog_prompt,
+                "total_headings": total_headings,
+                "current_heading": current_heading
             }
         ) 
         print("------- Content Generated -------")
@@ -349,6 +367,7 @@ workflow = StateGraph(GraphState)
 workflow.add_node("retrieve", retrieve)
 workflow.add_node("generate", generate)
 workflow.set_entry_point("retrieve")
+
 workflow.add_edge("retrieve", "generate")
 workflow.add_edge("generate", END)
 app = workflow.compile()

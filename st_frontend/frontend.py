@@ -120,7 +120,10 @@ def main(app):
             context['rephrase'] = False
             content = ''
             st.markdown(f"<h1>{title}</h1>", unsafe_allow_html=True)
-            for heading in headings:
+            for index in range(len(headings)):
+                heading = headings[index]
+                context['total_headings'] = len(headings) + 1
+                context['current_heading'] = index + 1
                 context['heading'] = heading
                 context['blog_title'] = title
                 context['blog_content'] = content

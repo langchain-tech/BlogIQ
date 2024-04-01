@@ -53,7 +53,7 @@ def get_serp_urls(question, location_code):
     payload = json.dumps(payload)
     response = requests.request("POST", SERP_API_URL, headers=get_headers(), data=payload)
     response = json.loads(response.text)
-
+    print(response)
     if 'tasks' in response and len(response['tasks']) > 0 and 'result' in response['tasks'][0] and len(response['tasks'][0]['result']) > 0 and 'items' in response['tasks'][0]['result'][0]:
         items = response['tasks'][0]['result'][0]['items']
 

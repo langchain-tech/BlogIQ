@@ -4,6 +4,6 @@ def faq_template():
     Here is the user commands for faq generation --> {faq_prompt}
     Here is the meta seo keywords :--> {selected_keywords}. You need to use them in faq to make them seo friendly.
     Here is the knowledge base that you have to use for writing the faq'a question answer --> {documents}
-    NOTE: Please provide content in proper <h3>, <p>, <ul>, <li>, <ol>, <b>, <i> and other required html tags.
+    Provide as a orderd list of faq's.
     """
     return template

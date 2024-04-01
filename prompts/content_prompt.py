@@ -2,35 +2,62 @@
 ### Use this code in between any file or function to stop debugger at any point pdb.set_trace()
 import pdb
 
-
 def content_template(blog):
-    template = """
-    NOTE: I NEED 100 PERCENT PLAGIARISM FREE CONTENT. DO NOT DIRECTLY COPY AND PASTE FROM KNOWLWDGE PROVIDED BELOW.
-    {blog_prompt}
-    You are a world class writer of blogs and articles and your name is Michael. You Will get the heading and can make subheadings as per your way of writing.
-    Here is the title of the blog --> {blog_title}
-    Here is the heading on that you need to write content and it should be a <h2> --> {heading}
-    Make sure the number of number of words not more than {number_of_words_per_heading}.
-    Don't add more number of sub headings in the content although add few headings but explain in detail.
-    """
-    content_blog = """
-    Here is the knowledge base for better understanding quality content blog --> {documents}
-    Important Command --> You need to write atleast 200 words for the given topic.
+  """
+  This function generates a formatted prompt for the LLM to create blog content.
 
-    Here is the meta seo keywords :--> {selected_keywords}. You need to use them in the content to make the content seo freiendly.
-    NOTE: Please provide content in proper <h3>, <h4>, <p>, <ul>, <li>, <ol>, <b>, <i>, <a> and other required html tags.
-    NOTE: Do not use same text for heading again and again. Make you dont use keywords like 'introduction'
-    """
-    return template + content(blog) + content_blog
+  Args:
+    blog (dict): Dictionary containing previously generated content (title, headings, content)
+                  if any.
+    heading (str): Current heading for which content needs to be generated.
+
+  Returns:
+    str: The formatted prompt template.
+  """
+
+  template = """
+  **NOTE: I NEED 100 PERCENT PLAGIARISM-FREE CONTENT. DO NOT DIRECTLY COPY AND PASTE FROM KNOWLEDGE PROVIDED BELOW.**
+
+  {blog_prompt}
+
+  You are a world-class writer of blogs and articles named Michael. You are going to provide headings of blog one by one and you need to write engaging and informative content for the following heading:
+
+  **You need to generate content on total {total_headings} for this blog.**
+  **Currently you are going to generate content for {current_heading} heading.**
+
+  <h2>{heading}</h2>
+
+  **Target Word Count:** {number_of_words_per_heading}
+
+  **NOTE: Please provide content in proper <h3>, <h4>, <p>, <ul>, <li>, <ol>, <b>, <i>, <a> and other required html tags.**
+
+  **NOTE: Do not need to provide in conclusion in all the headings.**
+
+  **Additionally, to further enhance user comprehension, consider including relevant code snippets within the content, especially for technical concepts. You can provide reference links for the important terms.**
+
+  **Knowledge Base:**
+
+  {documents}  **Important Note:** Aim for at least 200 words while maintaining clarity and avoiding excessive subheadings.
+
+  **SEO Keywords:** {selected_keywords}
+
+  """
+  print(template + content(blog))
+  return template + content(blog)
 
 
 def content(blog):
-    if blog:
-        return "/nWill provide you the already wriiten  blog and you need to take care to not make headings and content duplicate at any cost. --> Already Written BLOG: {blog_content}/n"
-    else:
-        return '/n'
+  """
+  This function retrieves previously generated content for the next heading.
 
+  Args:
+    blog (dict): Dictionary containing previously generated content.
 
+  Returns:
+    str: The previously generated content or an empty string.
+  """
 
-
-#Here is the user commands for generation of blog --> {structure_prompt}
+  if blog:
+    return "\n**Previously Generated Content:** --> {blog_content}\n\n MOST IMPORTANT WARNING: First check the previously generated content and only than generate new content which unique and no duplicacy happens in the content at any cost."
+  else:
+    return "\n"
