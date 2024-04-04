@@ -57,18 +57,21 @@ def handle_urls():
     return []
 
 def handle_serp_api(option, question, session_data):
+    urls = []
+    if (option == 'Use Serpi Api' or option == 'Use Both of them') and question:
+        if st.button("Fetch Urls from DataForSeo"):
+            response = get_serp_urls(question, session_data['country'])
+            urls = response.data['data']
+
     if option == 'Use Serpi Api' and question:
-        response = get_serp_urls(question, session_data['country'])
-        # return serp_api_caller(question)
-        return response.data['data']
+        return urls
     elif option == 'Use Custom Urls':
         return handle_urls()
     elif option == 'Use Both of them' and question:
-        # return (handle_urls() + serp_api_caller(question))
-        response = get_serp_urls(question, session_data['country'])
-        return (handle_urls() + response.data['data'])
+        return (handle_urls() + urls)
     else:
-        st.write('No option selected')
+        st.write('Topic Must be present!')
+        return []
 
 
 def primary_details(session_data):
@@ -79,14 +82,20 @@ def primary_details(session_data):
     selected_country = st.selectbox("Select a country", ['United States'])
     session_data['country'] = frozen_locations[selected_country]
     option = st.radio('Select an option:', ['Use Serpi Api', 'Use Custom Urls', 'Use Both of them'])
-
-    if (session_data['urls'] == []) or (session_data['option'] != option):
-        urls = handle_serp_api(option, question, session_data)
-        if urls:
-            session_data['urls'] = urls
-    
+    urls = handle_serp_api(option, question, session_data)
+    if len(urls) > 0:
+        session_data['urls'] = urls
     selected_urls = st.multiselect("Select Urls", session_data['urls'])
+    st.write("Available urls from DataForSeo:")
     st.write(session_data['urls'])
+    if selected_urls:
+        session_data['selected_urls'] = selected_urls
+
+    if st.button("Reset selected from DataForSeo:"):
+        session_data['selected_urls'] = []
+    st.write("Selected urls from DataForSeo:")
+    st.write(session_data['selected_urls'])
+
     session_data['option'] = option
 
     if question and primary_keyword and st.button('Fetch Secondary keywords Using LLM:'):
@@ -155,8 +164,6 @@ def primary_details(session_data):
     session_data['selected_keywords'] = selected_keywords
     session_data['question'] = question
     session_data['primary_keyword'] = primary_keyword
-    if selected_urls:
-        session_data['selected_urls'] = selected_urls
 
     return question, primary_keyword, session_data['urls'], session_data['selected_urls']
 

@@ -58,6 +58,6 @@ def content(blog):
   """
 
   if blog:
-    return "\n**Previously Generated Content:** --> {blog_content}\n\n MOST IMPORTANT WARNING: First check the previously generated content and only than generate new content which unique and no duplicacy happens in the content at any cost."
+    return "\n**Previously Generated Content:** --> {blog_content}\n\n MOST IMPORTANT WARNING: First check the previously generated content and only than generate new content which is unique and no duplicacy happens in the content at any cost."
   else:
     return "\n"
