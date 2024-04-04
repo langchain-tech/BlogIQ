@@ -14,103 +14,123 @@ def average_number_of_words(range_str, num_headings):
     return average_words // num_headings
 
 def main(app):
-    st.set_page_config(page_title='AI Blog Generator', page_icon=None, layout="centered", initial_sidebar_state="auto", menu_items=None)
-    st.sidebar.title("Blog Generator for SEO")
+    st.set_page_config(page_title='AI Content Generator', page_icon=None, layout="centered", initial_sidebar_state="auto", menu_items=None)
+    st.sidebar.title("Content Generator for SEO")
 
     if 'session_data' not in st.session_state:
         st.session_state.session_data = initialize_session_data()
 
-    current_step = st.sidebar.radio("Step to create a Blog:", ["Primary Details", "Generate Structure", "Generate Content"])
+    current_step = st.sidebar.radio("Step to create a Blog:", ["Primary Details", "Generate Structure", "Generate Blog", "Generate Faq's"])
 
     if current_step == "Primary Details":
         primary_details(st.session_state.session_data)
     elif current_step == "Generate Structure":
-        output = ''
-        generate_structure_form(st.session_state.session_data)
-        st.session_state.session_data['step_to_execute'] = current_step
-        if st.button("Generate Blog Structure"):
-            context = st.session_state.session_data
-            output = app.invoke({"keys": context})
-            st.subheader("Generated Content:")
-            structure = output["keys"]["generation"]
-            st.session_state.session_data['structure'] = (structure or context['structure'])
+        if st.button("Provide Structure Manually"):
+            st.session_state.session_data['gen_step'] = 1
+        if st.button("Generate Structure By LLM"):
+            st.session_state.session_data['gen_step'] = 2
 
-        temp_structure = st.session_state.session_data
-
-        if temp_structure and 'structure' in temp_structure:
-            if output:
-                st.session_state.session_data['collection_key'] = output["keys"]["collection_key"]
-            data = ast.literal_eval(temp_structure['structure'])
-            for key, value in data.items():
-                st.write(f"## {convert_to_title_case(key)}")
-                st.write(f"## Title: {value['title']}")
-                for heading in value['headings']:
-                    st.write(heading)
-
-            titles = [value['title'] for value in data.values()]
-            title = st.selectbox("Select Title", titles)
-            all_headings = [heading for value in data.values() for heading in value['headings']]
-
-            manual_headings = st.text_input("Enter Manual headings (comma separated):")
-            manual_headings = manual_headings.split(',')
-            st.session_state.session_data['manual_headings'] = manual_headings
-
-            if manual_headings:
-                all_headings = all_headings + manual_headings
-
-
-            selected_headings = st.multiselect('Select Headings', all_headings)
-            if st.button("Reset Headings"):
-                st.session_state.session_data['selected_headings'] = []
-
+        if st.session_state.session_data['gen_step'] == 1:
+            st.title("Provide Structure:")
+            title = st.text_input("Enter Blog Tile:")
+            if title:
+                st.session_state.session_data['blog_title'] = title
+            selected_headings = st.text_input("Enter Manual headings (comma separated):")
             if selected_headings:
+                selected_headings = selected_headings.split(',')
                 st.session_state.session_data['selected_headings'] = selected_headings
-            st.session_state.session_data['blog_title'] = title
-            st.write(f"### Selected Blog Structure:")
+            st.write(f"### Blog Title:")
             st.write(f"## {st.session_state.session_data['blog_title']}")
             st.write("### Headings:")
             for heading in st.session_state.session_data['selected_headings']:
                 st.write(heading)
+        elif st.session_state.session_data['gen_step'] == 2:
+            st.title("Generate Structure:")
+            output = ''
+            generate_structure_form(st.session_state.session_data)
+            st.session_state.session_data['step_to_execute'] = current_step
+            if st.button("Generate Blog Structure"):
+                context = st.session_state.session_data
+                output = app.invoke({"keys": context})
+                st.subheader("Generated Content:")
+                structure = output["keys"]["generation"]
+                st.session_state.session_data['structure'] = (structure or context['structure'])
+
+            temp_structure = st.session_state.session_data
+
+            if temp_structure and 'structure' in temp_structure:
+                if output:
+                    st.session_state.session_data['collection_key'] = output["keys"]["collection_key"]
+                data = ast.literal_eval(temp_structure['structure'])
+                for key, value in data.items():
+                    st.write(f"## {convert_to_title_case(key)}")
+                    st.write(f"## Title: {value['title']}")
+                    for heading in value['headings']:
+                        st.write(heading)
+
+                titles = [value['title'] for value in data.values()]
+                title = st.selectbox("Select Title", titles)
+                all_headings = [heading for value in data.values() for heading in value['headings']]
+
+                manual_headings = st.text_input("Enter Manual headings (comma separated):")
+                manual_headings = manual_headings.split(',')
+                st.session_state.session_data['manual_headings'] = manual_headings
+
+                if manual_headings:
+                    all_headings = all_headings + manual_headings
+
+                selected_headings = st.multiselect('Select Headings', all_headings)
+                if st.button("Reset Headings"):
+                    st.session_state.session_data['selected_headings'] = []
+
+                if selected_headings:
+                    st.session_state.session_data['selected_headings'] = selected_headings
+                st.session_state.session_data['blog_title'] = title
+                st.write(f"### Selected Blog Structure:")
+                st.write(f"## {st.session_state.session_data['blog_title']}")
+                st.write("### Headings:")
+                for heading in st.session_state.session_data['selected_headings']:
+                    st.write(heading)
 
 
 
-    elif current_step == "Generate Content":
+    elif current_step == "Generate Blog":
+        blog_prompt = st.text_area("Enter Prompt for Blog Generation:", st.session_state.session_data['blog_prompt'])
+        st.session_state.session_data['blog_prompt'] = blog_prompt
         st.session_state.session_data['step_to_execute'] = current_step
         context = st.session_state.session_data
-        structure_text = context['structure']
-        parsed_structure = ast.literal_eval(structure_text)
         headings =  context['selected_headings']
         title = context['blog_title']
 
         st.write(f"## Question :--> {context['question']}")
         st.write(f"## Primary Keyword :--> {context['primary_keyword']}")
-        st.write(f"## Word Limit :--> {context['blog_words_limit']} approx.")
-        st.write(f"## Additional Context :--> {context['additional_context']}")
         st.write(f"## Selected Meta Keywords :-->")
         st.write("<ul>", unsafe_allow_html=True)
         for keyword in context['selected_keywords']:
             st.write(f"<li>{keyword}</li>",unsafe_allow_html=True)
         st.write("</ul>", unsafe_allow_html=True)
-
         st.write(f"## Blog Title :--> {title}")
 
         for heading in headings:
             st.write(heading)
 
-
-        context['number_of_words_per_heading'] = average_number_of_words(context['blog_words_limit'], len(headings))
+        # context['number_of_words_per_heading'] = average_number_of_words(context['blog_words_limit'], len(headings))
 
         if st.button("Generate Blog Content"):
             context['rephrase'] = False
             content = ''
             st.markdown(f"<h1>{title}</h1>", unsafe_allow_html=True)
-            for heading in headings:
+            for index in range(len(headings)):
+                heading = headings[index]
+                context['total_headings'] = len(headings) + 1
+                context['current_heading'] = index + 1
                 context['heading'] = heading
                 context['blog_title'] = title
                 context['blog_content'] = content
                 time.sleep(20)
                 output = app.invoke({"keys": context})
                 current_heading_content = output["keys"]["blog"]
+                st.session_state.session_data['collection_key'] = output["keys"]["collection_key"]
                 content += f"{current_heading_content}\n\n"
                 st.session_state.session_data['blog'] = content
                 st.markdown(f"{current_heading_content}\n\n", unsafe_allow_html=True)
@@ -151,3 +171,53 @@ def main(app):
 
             # if st.sidebar.button("Reset", key="reset"):
             #     st.session_state.session_data = initialize_session_data()
+    elif current_step == "Generate Faq's":
+        faq_prompt = st.text_area("Enter Prompt for Faq's Generation:", st.session_state.session_data['faq_prompt'])
+        st.session_state.session_data['faq_prompt'] = faq_prompt
+        st.session_state.session_data['step_to_execute'] = current_step
+        context = st.session_state.session_data
+        headings =  context['selected_headings']
+        title = context['blog_title']
+        st.write(f"## Question :--> {context['question']}")
+        st.write(f"## Primary Keyword :--> {context['primary_keyword']}")
+        st.write(f"## Selected Meta Keywords :-->")
+        st.write("<ul>", unsafe_allow_html=True)
+        for keyword in context['selected_keywords']:
+            st.write(f"<li>{keyword}</li>",unsafe_allow_html=True)
+        st.write("</ul>", unsafe_allow_html=True)
+        st.write(f"## Blog Title :--> {title}")
+
+        for heading in headings:
+            st.write(heading)
+
+        if st.button("Generate Faq's"):
+            output = app.invoke({"keys": context})
+            faqs = output["keys"]["blog"]
+            st.session_state.session_data['faqs'] = faqs
+            st.session_state.session_data['collection_key'] = output["keys"]["collection_key"]
+            st.markdown(st.session_state.session_data['faqs'], unsafe_allow_html=True)
+
+        st.markdown(st.session_state.session_data['faqs'], unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
