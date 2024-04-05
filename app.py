@@ -297,7 +297,6 @@ def generate(state):
                 "selected_keywords": selected_keywords
             }
         )
-        pdb.set_trace()
         print("------- Structure Generated -------")
 
     elif rephrase == True:
