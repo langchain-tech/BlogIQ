@@ -61,10 +61,10 @@ Before running the app, make sure you have the following dependencies installed:
     OPENAI_API_KEY=your_openai_api_key
     LANGCHAIN_API_KEY=your_langchain_api_key
     TAVILY_API_KEY=your_tavily_api_key
-    SERP_API_KEY=your_serp_api_key
+    DATA_FOR_SEO_TOKEN=your_data_for_seo_api_key
     ```
 
-    Replace `your_langchain_tracing_v2_key`, `your_langchain_project_key`, `your_openai_api_key`, `your_langchain_api_key`, `your_tavily_api_key`, and `your_serp_api_key` with your actual API keys.
+    Replace `your_langchain_tracing_v2_key`, `your_langchain_project_key`, `your_openai_api_key`, `your_langchain_api_key`, `your_tavily_api_key`, and `your_data_for_seo_api_key` with your actual API keys.
 
 ## Usage
 
@@ -75,12 +75,6 @@ Before running the app, make sure you have the following dependencies installed:
     ```
 
 2. Access the app in your web browser at [http://localhost:8501](http://localhost:8501).
-
-3. Enter your question, meta description, and keywords in the input fields.
-
-4. Click the "Generate SEO Content" button.
-
-5. View the generated content in the app.
 
 ## Additional Information
 
