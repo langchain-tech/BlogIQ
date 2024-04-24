@@ -60,11 +60,10 @@ Before running the app, make sure you have the following dependencies installed:
     LANGCHAIN_PROJECT=your_langchain_project_key
     OPENAI_API_KEY=your_openai_api_key
     LANGCHAIN_API_KEY=your_langchain_api_key
-    TAVILY_API_KEY=your_tavily_api_key
     DATA_FOR_SEO_TOKEN=your_data_for_seo_api_key
     ```
 
-    Replace `your_langchain_tracing_v2_key`, `your_langchain_project_key`, `your_openai_api_key`, `your_langchain_api_key`, `your_tavily_api_key`, and `your_data_for_seo_api_key` with your actual API keys.
+    Replace `your_langchain_tracing_v2_key`, `your_langchain_project_key`, `your_openai_api_key`, `your_langchain_api_key`, and `your_data_for_seo_api_key` with your actual API keys.
 
 ## Usage
 
