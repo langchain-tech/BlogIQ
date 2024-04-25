@@ -20,6 +20,9 @@ Expanding upon the chosen structure, BlogIQ dynamically generates content enrich
 
 In the final stage, BlogIQ completes the content creation journey by generating FAQs for the blog. By analyzing the generated content and identifying potential questions, the app automatically generates a set of FAQs, enriching the blog post with valuable additional information and enhancing its engagement potential. 🤔💬
 
+![ezgif com-optimize](https://github.com/langchain-tech/BlogIQ/assets/100914015/1b53acb4-bdd9-4bfe-9e81-03dafb11ef68)
+
+
 ## Getting Started
 
 ### Prerequisites
