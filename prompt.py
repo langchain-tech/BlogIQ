@@ -1,12 +1,36 @@
-from langchain import PromptTemplate
+def get_structure_template():
+    template = """
+    Please provide me structure of blog of on {question}, must have a structure, must have good headings and must have 10 headings.
+    Important Commands --> Need to provide a good title and its must contain the key word --> {primary_keyword}
+    Additional commands need to follow -->
+    {structure_prompt}
 
-# def get_template():
+    Here is the knowledge base for better understanding quality content blog --> {documents}
+    NOTE --> Provide at least three sets of structure with different variations in heading.
+    Note to Content Creator: Please ensure that the content you generate is entirely original and not copied from any existing sources. Avoid direct copy-pasting and provide unique insights and perspectives. Plagiarism is strictly prohibited, and we require 100% unique content for the blog. Make sure to use your own words and creativity to deliver high-quality, original content. Thank you for your understanding and adherence to these guidelines.
+    Very Import Note -->  Proivde structure as json
+    Here is the DEMO structure to follow --> {blog_structure}
+    """
+    return template
+
+# def get_content_generator_template():
 #     template = """
-#     Provide me Good Blog
-#     Note --> Generates content without imposing a maximum token limit. Must contain {blog_words_limit} words.
-#     As you are one of the best content writers in the world, your name is Joe. Today, we're tasked with writing a blog post on 
+#     You are a world class blog write and your name is Michael. You need to write a write a blog using the first object from the python dictionary.
+#     Here is the strcuture dictionary object --> {structure}
+#     Here is the knowledge base for better understanding quality content blog --> {documents}
+#     Important Command --> You need to write atleast 200 words for each heading.
 #     """
 #     return template
+
+def get_content_generator_template():
+    template = """
+    You are a world class writer of blogs and articles and your name is Michael. Will provide you the heading and can make subheadings as per your way of writing.
+    Here is the heading on that you need to write content --> {heading}
+    Here is the knowledge base for better understanding quality content blog --> {documents}
+    Important Command --> You need to write atleast 200 words for the given topic.
+    """
+    return template
+
 
 # def get_template():
 #     template = """
@@ -25,54 +49,29 @@ from langchain import PromptTemplate
 
 #     I'll be provided with documents to review and understand the topics we'll be covering. Additionally, I'll provide meta keywords that we need to incorporate to enhance our ranking on Google search.
 
-#     Here is the documents (knowledge base) that you need to utilise to write blog --> {documents}, meta keywords --> {keywords_string} & here is addtional context ---> {additional_context}
+#     Here is the documents (knowledge base) that you need to utilise to write blog --> {documents}, primary meta keywords --> {primary_keyword} & here is addtional context ---> {structure_prompt}
 #     """
 #     return template
 
-def get_template():
-    template = """
-        Provide a comprehensive blog post on the topic of Natural Language Processing (NLP).
+# def get_template():
+#     template = """
+#         Provide a comprehensive blog post on the topic of Natural Language Processing (NLP).
         
-        Historical Roots of NLP:
-        Discuss the evolution of NLP from its inception, highlighting key milestones and early challenges. Consider the Turing Test, early attempts, and notable achievements.
+#         Additional Context:
 
-        Core Mechanisms of NLP:
-        Explore fundamental NLP mechanisms like tokenization, part-of-speech tagging, named entity recognition, and sentiment analysis. Elaborate on their significance and applications.
+#         {structure_prompt}
 
-        Evolution of NLP:
-        Trace the evolution from rule-based systems to machine learning. Discuss the impact of machine learning on NLP advancements, with a focus on key models and breakthroughs.
+#         Meta Keywords:
+#         {keywords_string}
 
-        Contemporary NLP:
-        Delve into the current era dominated by deep learning and neural networks. Highlight models such as BERT and GPT, emphasizing their contextual understanding and generative capabilities.
+#         Knowledge Base:
+#         {documents}
 
-        Evaluation Metrics in NLP:
-        Explain the metrics used to assess NLP model performance. Include insights into text classification metrics, language generation evaluation, and the importance of accurate assessment.
+#         Blog Minimum Word Limit and make sure blog contains:
+#         {blog_words_limit}
+#     """
+#     return template
 
-        Ethical Dimensions of NLP:
-        Address the ethical considerations in NLP, including issues of bias, data privacy, and responsible AI usage. Discuss the challenges and proposed solutions for ethical NLP development.
 
-        Future Trajectories of NLP:
-        Look ahead to the future of NLP, considering advancements in quantum computing, integration with other AI domains, and the importance of explainable AI.
-
-        Conclusion:
-        Summarize the significance of NLP in the technological landscape. Emphasize the transformative impact and the ongoing journey toward a more connected and intelligent future.
-
-        Additional Context:
-        {additional_context}
-
-        Meta Keywords:
-        {keywords_string}
-
-        Knowledge Base:
-        {documents}
-
-        Blog Minimum Word Limit and make sure blog contains:
-        {blog_words_limit}
-    """
-    return template
-
-def sorted_keywords_string(keywords):
-    sorted_keywords = dict(sorted(keywords.items(), key=lambda item: item[1], reverse=True))
-    return ", ".join(sorted_keywords.keys())
 
 

@@ -1,3 +1,10 @@
+# CREATE TABLE public.embeddings (
+#     collection_key character varying,
+#     serp_urls      character varying[], -- Assuming ARRAY of character varying
+#     created_at     timestamp without time zone,
+#     updated_at     timestamp without time zone
+# );
+
 import psycopg2
 
 import os

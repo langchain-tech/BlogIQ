@@ -1,1 +1,8 @@
 .env
+/__pycache__
+.DS_Store
+/api_helper/__pycache__
+/st_frontend/__pycache__
+/prompts/__pycache__
+/seo/__pycache__
+/llm_keyword_fetcher/__pycache__

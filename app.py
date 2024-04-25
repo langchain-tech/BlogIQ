@@ -24,11 +24,18 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.utils.function_calling import convert_to_openai_tool
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from postgres import create_record, update_record
-from prompt import get_template, sorted_keywords_string
+from prompt import get_structure_template, get_content_generator_template
 
 
 from langchain_community.chat_models import ChatOllama
 from langchain_community.embeddings import OllamaEmbeddings
+
+## app imports
+from st_frontend.frontend import main
+from prompts.content_prompt import content_template
+from prompts.structure_prompt import structure_template
+from prompts.feedback_content_prompt import feedback_content_template
+from prompts.faq_prompt import faq_template
 
 ### Uncomment import 'pdb' this to use debugger in the app
 ### Use this code in between any file or function to stop debugger at any point pdb.set_trace()
@@ -42,41 +49,19 @@ os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGCHAIN_PROJECT")
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
 os.environ["TAVILY_API_KEY"] = os.getenv("TAVILY_API_KEY")
-SERP_API_KEY = os.getenv("SERP_API_KEY")
 
 class GraphState(TypedDict):
     keys: Dict[str, any]
 
-def serp_api_caller(question):
-    print("---Calling SerpApi---")
-    params = {
-        "engine": "google",
-        "q": question,
-        "api_key": SERP_API_KEY
-    }
-    search = GoogleSearch(params)
-    results = search.get_dict()
-    organic_results = results["organic_results"]
-    return [details['link'] for details in organic_results]
-
-
-def create_collection(collection_name, question, urls, option):
-    if option == 'Use Serpi Api':
-        urls = serp_api_caller(question)
-    elif option == 'Use Custom Urls':
-        urls
-    elif option == 'Use Both of them':
-        serp_urls = serp_api_caller(question)
-        urls = urls + serp_urls
+def create_collection(collection_name, question, urls):
     print("---Got Results---")
-    print(urls)
     docs = [WebBaseLoader(url).load() for url in urls]
     docs_list = [item for sublist in docs for item in sublist]
-    print(docs_list)
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=250, chunk_overlap=0
+        chunk_size=1000, chunk_overlap=0
     )
     doc_splits = text_splitter.split_documents(docs_list)
+    print("---CREATING NEW DOCUMENTS---")
     vectorstore = Chroma.from_documents(
         documents=doc_splits,
         collection_name=collection_name,
@@ -87,77 +72,293 @@ def create_collection(collection_name, question, urls, option):
     return vectorstore.as_retriever()
 
 def retrieve_documents(collection_name, question):
-    embedding_function = OllamaEmbeddings()
+    print("---RETRIEVING OLD DOCUMENTS---")
+    embedding_function = OpenAIEmbeddings()
     vectorstore = Chroma(collection_name, embedding_function)
-    retriever = vectorstore.as_retriever()
-    documents = retriever.get_relevant_documents(question)
-    return documents
+    return vectorstore.as_retriever()
+     
 
 def retrieve(state):
     print("---RETRIEVE---")
     state_dict = state["keys"]
     question = state_dict["question"]
-    keywords = state_dict["keywords"]
-    additional_context = state_dict["additional_context"]
-    blog_words_limit = state_dict["blog_words_limit"]
-    option = state_dict["option"]
-    urls = state_dict["urls"]
-    collection_key = secrets.token_hex(12 // 2)
-    retriever = create_collection(collection_key, question, urls, option)
-    documents = retriever.get_relevant_documents(question)
-    return {    "keys":
+    primary_keyword = state_dict["primary_keyword"]
+    structure_prompt = state_dict["structure_prompt"]
+    urls = state_dict["selected_urls"]
+    step_to_execute = state_dict["step_to_execute"]
+    selected_keywords = state_dict["selected_keywords"]
+
+
+    if 'total_headings' in state_dict:
+        total_headings = state_dict['total_headings']
+    else:
+        total_headings = ''
+
+    if 'current_heading' in state_dict:
+        current_heading = state_dict['current_heading']
+    else:
+        current_heading = ''
+
+    if 'faq_prompt' in state_dict:
+        faq_prompt = state_dict['faq_prompt']
+    else:
+        faq_prompt = ''
+
+    if 'blog_prompt' in state_dict:
+        blog_prompt = state_dict['blog_prompt']
+    else:
+        blog_prompt = ''
+
+    if 'number_of_words_per_heading' in state_dict:
+        number_of_words_per_heading = state_dict['number_of_words_per_heading']
+    else:
+        number_of_words_per_heading = ''
+
+    if 'blog_content' in state_dict:
+        blog_content = state_dict['blog_content']
+    else:
+        blog_content = ''
+
+    if 'blog_title' in state_dict:
+        blog_title = state_dict["blog_title"]
+    else:
+        blog_title = ''
+
+    if 'blog' in state_dict:
+        blog = state_dict["blog"]
+    else:
+        blog = ''
+
+    if 'rephrase_context' in state_dict:
+        rephrase_context = state_dict["rephrase_context"]
+    else:
+        rephrase_context = ''
+
+    if 'rephrase' in state_dict:
+        rephrase = state_dict["rephrase"]
+    else:
+        rephrase = ''
+
+    if 'structure' in state_dict:
+        structure = state_dict["structure"]
+    else:
+        structure = ""
+
+    if 'heading' in state_dict:
+        heading = state_dict["heading"]
+    else:
+        heading = ""
+
+
+    if 'collection_key' in state_dict:
+        collection_key = state_dict["collection_key"]
+        retriever = retrieve_documents(collection_key, heading)
+    else:
+        collection_key = secrets.token_hex(12 // 2)
+        retriever = create_collection(collection_key, question, urls)
+
+    documents = retriever.get_relevant_documents(heading)
+
+    return  {    "keys":
 
                 {
                     "documents": documents,
                     "question": question,
-                    'keywords': keywords,
-                    "additional_context": additional_context,
-                    "blog_words_limit": blog_words_limit,
-                    "option": option,
-                    "urls": urls
+                    'primary_keyword': primary_keyword,
+                    "structure_prompt": structure_prompt,
+                    "urls": urls,
+                    "step_to_execute": step_to_execute,
+                    "structure": structure,
+                    "collection_key": collection_key,
+                    "heading": heading,
+                    "rephrase_context": rephrase_context,
+                    "rephrase": rephrase,
+                    "blog": blog,
+                    "blog_title": blog_title,
+                    "selected_keywords": selected_keywords,
+                    "blog_content": blog_content,
+                    "number_of_words_per_heading": number_of_words_per_heading,
+                    "blog_prompt": blog_prompt,
+                    "faq_prompt": faq_prompt,
+                    "total_headings": total_headings,
+                    "current_heading": current_heading
+
                 }
             }
 
 def generate(state):
+    blog_structure = {
+        "Blog_Structure_1":
+            {
+                "title": "TITLE",
+                "headings":
+                    [
+                        "HEADING 1",
+                        "HEADING 2",
+                        "HEADING 3",
+                        "HEADING 4",
+                        "HEADING 5",
+                        "HEADING 6",
+                        "HEADING 7",
+                        "HEADING 8",
+                        "HEADING 9",
+                        "HEADING 10"
+                    ]
+            },
+        "Blog_Structure_2":
+            {
+                "title": "TITLE",
+                "headings":
+                    [
+                        "HEADING 1",
+                        "HEADING 2",
+                        "HEADING 3",
+                        "HEADING 4",
+                        "HEADING 5",
+                        "HEADING 6",
+                        "HEADING 7",
+                        "HEADING 8",
+                        "HEADING 9",
+                        "HEADING 10"
+                    ]
+            },
+        "Blog_Structure_3":
+            {
+                "title": "TITLE",
+                "headings":
+                    [
+                        "HEADING 1",
+                        "HEADING 2",
+                        "HEADING 3",
+                        "HEADING 4",
+                        "HEADING 5",
+                        "HEADING 6",
+                        "HEADING 7",
+                        "HEADING 8",
+                        "HEADING 9",
+                        "HEADING 10"
+                    ]
+            }
+    }
     print("---GENERATE---")
     state_dict = state["keys"]
     question = state_dict["question"]
     documents = state_dict["documents"]
-    keywords = state_dict["keywords"]
-    additional_context = state_dict["additional_context"]
-    blog_words_limit = state_dict["blog_words_limit"]
-    option = state_dict["option"]
+    primary_keyword = state_dict["primary_keyword"]
+    structure_prompt = state_dict["structure_prompt"]
     urls = state_dict["urls"]
-    keywords_string = sorted_keywords_string(keywords)
-    template = get_template()
-    prompt = PromptTemplate(template=template, input_variables=["context", "question", "additional_context", "keywords_string", "blog_words_limit"])
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=0.7, streaming=True, max_tokens=4096, stop=None)
+    collection_key = state_dict["collection_key"]
+    step_to_execute = state_dict["step_to_execute"]
+    structure = state_dict["structure"]
+    heading = state_dict["heading"]
+    rephrase_context = state_dict["rephrase_context"]
+    rephrase = state_dict["rephrase"]
+    blog = state_dict["blog"]
+    blog_title = state_dict["blog_title"]
+    selected_keywords = state_dict['selected_keywords']
+    blog_content = state_dict['blog_content']
+    number_of_words_per_heading = state_dict['number_of_words_per_heading']
+    blog_prompt = state_dict['blog_prompt']
+    faq_prompt = state_dict['faq_prompt']
+    total_headings = state_dict['total_headings']
+    current_heading = state_dict['current_heading']
+    print(state_dict)
+
+    if step_to_execute == "Generate Structure":
+        heading = ''
+        template = structure_template()
+        prompt = PromptTemplate(template=template, input_variables=["documents", "question", "structure_prompt", "primary_keyword", "blog_structure", "selected_keywords"])
+    elif rephrase == True:
+        template = feedback_content_template()
+        prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "refference_links", "rephrase_context", "blog", "structure_prompt"])
+    elif step_to_execute == "Generate Blog":
+        heading = state_dict["heading"]
+        template = content_template(blog_content)
+        prompt = PromptTemplate(template=template, input_variables=["documents", "structure", "primary_keyword", "number_of_words_per_heading", "refference_links", "heading", "blog_title", "selected_keywords", "blog_content", "blog_prompt", "total_headings", "current_heading"])
+    elif step_to_execute == "Generate Faq's":
+        template = faq_template()
+        prompt = PromptTemplate(template=template, input_variables=["documents", "primary_keyword", "selected_keywords", "faq_prompt"])
+
+    llm = ChatOpenAI(model_name="gpt-4-turbo-preview", temperature=0.7, streaming=True, max_tokens=4096, verbose=True)
+    # llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=0.7, streaming=True, max_tokens=4096, verbose=True)
     # llm = ChatOllama(model="llama2:latest")
-    def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
-    print(prompt)
     rag_chain = prompt | llm | StrOutputParser()
-    generation = rag_chain.invoke(
-        {
-            "documents": documents,
-            "question": question,
-            "additional_context": additional_context,
-            "keywords_string": keywords_string,
-            "blog_words_limit": blog_words_limit
-        }
-    )
-    print("------- Generated -------")
-    return {    "keys":
+
+    if step_to_execute == "Generate Structure":
+
+        generation = rag_chain.invoke(
+            {
+                "documents": documents,
+                "question": question,
+                "structure_prompt": structure_prompt,
+                "primary_keyword": primary_keyword,
+                "refference_links": urls,
+                "blog_structure": blog_structure,
+                "selected_keywords": selected_keywords
+            }
+        )
+        print("------- Structure Generated -------")
+
+    elif rephrase == True:
+        generation = rag_chain.invoke(
+            {
+                "documents": documents,
+                "primary_keyword": primary_keyword,
+                "refference_links": urls,
+                "structure": structure,
+                "heading": heading,
+                "blog": blog,
+                "blog_title": blog_title,
+                "rephrase_context": rephrase_context,
+                "structure_prompt": structure_prompt
+            }
+        )
+        print("------- Content Rephrased -------")
+
+    elif step_to_execute == "Generate Blog":
+        generation = rag_chain.invoke(
+            {
+                "documents": documents,
+                "primary_keyword": primary_keyword,
+                "refference_links": urls,
+                "structure": structure,
+                "heading": heading,
+                "blog": blog,
+                "blog_title": blog_title,
+                "selected_keywords": selected_keywords,
+                "blog_content": blog_content,
+                "number_of_words_per_heading": number_of_words_per_heading,
+                "blog_prompt": blog_prompt,
+                "total_headings": total_headings,
+                "current_heading": current_heading
+            }
+        ) 
+        print("------- Content Generated -------")
+
+    elif step_to_execute == "Generate Faq's":
+        generation = rag_chain.invoke(
+            {
+                "documents": documents,
+                "primary_keyword": primary_keyword,
+                "selected_keywords": selected_keywords,
+                "faq_prompt": faq_prompt,
+            }
+        )
+        print("------- Faq's Generated -------")
+
+    return  {    "keys":
 
                 {
                     "documents": documents,
                     "question": question,
-                    'keywords': keywords,
-                    "additional_context": additional_context,
-                    "blog_words_limit": blog_words_limit,
-                    "option": option,
+                    'primary_keyword': primary_keyword,
+                    "structure_prompt": structure_prompt,
                     "urls": urls,
-                    "generation": generation
+                    "generation": generation,
+                    "step_to_execute": step_to_execute,
+                    "blog": generation,
+                    "collection_key": collection_key,
+                    "heading": heading
 
                 }
             }
@@ -166,80 +367,10 @@ workflow = StateGraph(GraphState)
 workflow.add_node("retrieve", retrieve)
 workflow.add_node("generate", generate)
 workflow.set_entry_point("retrieve")
+
 workflow.add_edge("retrieve", "generate")
 workflow.add_edge("generate", END)
 app = workflow.compile()
 
-
-
-def handle_urls():
-    urls_str = st.text_input("Enter URLs (separated by commas):")
-    if urls_str:
-        urls_str = urls_str.strip()
-        if urls_str:
-            urls = [url.strip() for url in urls_str.split(",")]
-            return urls
-        else:
-            st.warning("Please enter URLs separated by commas.")
-    return None
-
-st.title("SEO Content Generator")
-
-question = st.text_input("Enter your question:")
-additional_context = st.text_area("Enter additional context:")
-blog_words_limit = st.radio('Blog size in number of words:', ['500 - 1000', '1000 - 1500', '1500 - 2000', '2000 - 2500'])
-
-keywords = {}
-num_keywords = st.number_input("Number of Keywords:", min_value=1, key="num_keywords_input")
-for i in range(num_keywords):
-  keyword = st.text_input(f"Keyword {i+1}:", key=f"keyword_input_{i+1}")
-  priority = st.number_input(f"Priority for {keyword} (higher = more important):", min_value=1, key=f"priority_input_{i+1}")
-  keywords[keyword] = priority
-
-
-option = st.radio('Select an option:', ['Use Serpi Api', 'Use Custom Urls', 'Use Both of them'])
-if option == 'Use Serpi Api':
-    st.write('Using Serp API!')
-    urls = []
-elif option == 'Use Custom Urls':
-    st.write('Using Custom Urls!')
-    urls = handle_urls()
-elif option == 'Use Both of them':
-    st.write('Using Both!')
-    urls = handle_urls()
-else:
-    st.write('No option selected')
-
-if st.button("Generate SEO Content"):
-  context = {
-      "question": question,
-      "additional_context": additional_context,
-      "keywords": keywords,
-      "blog_words_limit": blog_words_limit,
-      "option": option,
-      "urls": urls
-  }
-  print(context)
-  output = app.invoke({"keys": context})
-  st.subheader("Generated Content:")
-  st.text(output["keys"]["generation"])
-
-
-
-#### Below code is use to manually invoke app.py
-
-# inputs = {"keys": {
-# 'question': 'How electrical tranformer works?',
-# 'additional_context': 'Explore the inner workings of electrical transformers and unravel the principles of electromagnetic induction that power these crucial devices. Discover how alternating current in the primary winding generates a magnetic field, inducing voltage in the secondary winding. Delve into the transformative role of the core material, voltage relationships, and the distinction between step-up and step-down transformers. Learn how transformers facilitate efficient energy transfer in power distribution, enabling electricity to flow seamlessly across long distances and meet diverse voltage requirements. This comprehensive guide illuminates the fundamental mechanisms behind how electrical transformers work, essential for anyone seeking insights into power systems and electrical engineering.',
-# 'keywords': {'Electromagnetic induction': 1}}}
-
-# for output in app.stream(inputs):
-#     for key, value in output.items():
-#         pprint.pprint(f"Node '{key}':")
-#     pprint.pprint("\n---\n")
-
-# pprint.pprint(value["keys"]["generation"])
-
-
-
-
+if __name__ == "__main__":
+    main(app)
