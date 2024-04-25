@@ -9,5 +9,6 @@ def structure_template():
     Note to Content Creator: Please ensure that the content you generate is entirely original and not copied from any existing sources. Avoid direct copy-pasting and provide unique insights and perspectives. Plagiarism is strictly prohibited, and we require 100% unique content for the blog. Make sure to use your own words and creativity to deliver high-quality, original content. Thank you for your understanding and adherence to these guidelines.
     Very Import Note -->  Proivde structure as json
     Here is the DEMO structure to follow --> {blog_structure}
+    DON'T INCLUDE this "```json" in the response.
     """
     return template

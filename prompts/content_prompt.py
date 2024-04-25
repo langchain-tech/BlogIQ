@@ -27,11 +27,11 @@ def content_template(blog):
 
   <h2>{heading}</h2>
 
+  **NOTE: Only add `Conclusion` and `Final Thoughts` in last heading of blog if required.**
+
   **Target Word Count:** {number_of_words_per_heading}
 
   **NOTE: Please provide content in proper <h3>, <h4>, <p>, <ul>, <li>, <ol>, <b>, <i>, <a> and other required html tags.**
-
-  **NOTE: Do not need to provide in conclusion in all the headings.**
 
   **Additionally, to further enhance user comprehension, consider including relevant code snippets within the content, especially for technical concepts. You can provide reference links for the important terms.**
 

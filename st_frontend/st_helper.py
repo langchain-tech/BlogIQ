@@ -1,5 +1,4 @@
 import streamlit as st
-import pycountry
 import types
 
 

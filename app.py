@@ -58,7 +58,7 @@ def create_collection(collection_name, question, urls):
     docs = [WebBaseLoader(url).load() for url in urls]
     docs_list = [item for sublist in docs for item in sublist]
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=250, chunk_overlap=0
+        chunk_size=1000, chunk_overlap=0
     )
     doc_splits = text_splitter.split_documents(docs_list)
     print("---CREATING NEW DOCUMENTS---")
@@ -279,7 +279,8 @@ def generate(state):
         template = faq_template()
         prompt = PromptTemplate(template=template, input_variables=["documents", "primary_keyword", "selected_keywords", "faq_prompt"])
 
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=0.7, streaming=True, max_tokens=4096, verbose=True)
+    llm = ChatOpenAI(model_name="gpt-4-turbo-preview", temperature=0.7, streaming=True, max_tokens=4096, verbose=True)
+    # llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=0.7, streaming=True, max_tokens=4096, verbose=True)
     # llm = ChatOllama(model="llama2:latest")
     rag_chain = prompt | llm | StrOutputParser()
 
@@ -296,7 +297,6 @@ def generate(state):
                 "selected_keywords": selected_keywords
             }
         )
-        pdb.set_trace()
         print("------- Structure Generated -------")
 
     elif rephrase == True:
