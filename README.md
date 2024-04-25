@@ -1,4 +1,4 @@
-## BlogIQ - Content Generation using AI
+## BlogIQ - Content Generation using AI (Clone of writesonic.com & copy.ai)
 
 ### 🚀 Introduction:
 
